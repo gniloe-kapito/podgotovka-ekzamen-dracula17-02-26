@@ -1,0 +1,2728 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Викторина по электробезопасности</title>
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: white;
+            --text-color: #333;
+            --header-color: #667eea;
+            --border-color: #e0e0e0;
+            --question-bg: #f8f9fa;
+            --answer-hover-bg: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #0f0c29;
+            --bg-gradient-end: #302b63;
+            --container-bg: #1a1a2e;
+            --text-color: #ffffff;
+            --header-color: #00d4ff;
+            --border-color: #3a3a52;
+            --question-bg: #16213e;
+            --answer-hover-bg: #1e2a47;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Звёздный фон для темной темы */
+        [data-theme="dark"] body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 60px 70px, #fff, transparent),
+                radial-gradient(1px 1px at 50px 50px, #ddd, transparent),
+                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 90px 10px, #eee, transparent),
+                radial-gradient(1px 1px at 200px 150px, #fff, transparent),
+                radial-gradient(1px 1px at 170px 120px, #ddd, transparent),
+                radial-gradient(2px 2px at 250px 60px, #eee, transparent);
+            background-size: 300px 300px;
+            background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+            animation: twinkle 200s linear infinite;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Падающие звезды */
+        [data-theme="dark"] body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            overflow: hidden;
+            pointer-events: none;
+            animation: shootingStar 15s linear infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.3;
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes shootingStar {
+            0% {
+                background-position: 100% 0%;
+            }
+            100% {
+                background-position: 0% 100%;
+            }
+        }
+
+        /* Редкие падающие звезды */
+        @keyframes shoot {
+            0% {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-300px) translateY(300px);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            background: var(--container-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease-out;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--container-bg);
+            border: 2px solid var(--border-color);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            color: var(--header-color);
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .finish-early-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: var(--text-color);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-weight: normal;
+        }
+
+        .finish-early-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .finish-early-btn:active {
+            transform: scale(0.9);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--header-color), #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .question-info {
+            background: var(--question-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--header-color);
+            transition: background 0.3s ease;
+        }
+
+        .question-number {
+            font-weight: bold;
+            color: var(--header-color);
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .question-text {
+            color: var(--text-color);
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .answer-btn {
+            background: var(--container-bg);
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 1em;
+            color: var(--text-color);
+        }
+
+        .answer-btn:hover {
+            border-color: var(--header-color);
+            background: var(--answer-hover-bg);
+            transform: translateX(5px);
+        }
+
+        .answer-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: pulse 0.5s;
+            color: #155724;
+        }
+
+        .answer-btn.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            animation: shake 0.5s;
+            color: #721c24;
+        }
+
+        /* Темная тема - делаем текст черным в выбранных ответах */
+        [data-theme="dark"] .answer-btn.correct {
+            color: #000;
+            background: #d4edda;
+        }
+
+        [data-theme="dark"] .answer-btn.incorrect {
+            color: #000;
+            background: #f8d7da;
+        }
+
+        .answer-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: none;
+            margin: 20px auto;
+            transition: transform 0.3s ease;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.3em;
+            color: var(--header-color);
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .final-score h2 {
+            color: var(--header-color);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .final-score p {
+            font-size: 1.3em;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .author {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85em;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Черный цвет для светлой темы */
+        :root .author {
+            color: #000;
+        }
+
+        [data-theme="dark"] .author {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .author a {
+            color: rgba(255, 255, 255, 1);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .author a:hover {
+            text-decoration: underline;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .start-screen h2 {
+            color: var(--header-color);
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .start-screen p {
+            color: var(--text-color);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .question-count-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .question-count-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .quiz-content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+            <span id="theme-icon">🌙</span>
+        </button>
+        
+        <div class="start-screen" id="startScreen">
+            <h2>🔌 Викторина по Спец.Тех.</h2>
+            <p>Проверьте свои знания перед экзаменом у Дракулы!<br>
+            Ответы на <strong>90% правильные</strong>, но могут содержать ошибки.<br>
+            База содержит <strong>175 вопросов</strong> разной сложности.</p>
+            
+            <div style="margin: 30px 0;">
+                <p style="font-weight: bold; margin-bottom: 15px; color: #667eea;">Выберите количество вопросов:</p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="question-count-btn" onclick="startQuizWithCount(15)">15 вопросов</button>
+                    <button class="question-count-btn" onclick="startQuizWithCount(25)">25 вопросов</button>
+                    <button class="question-count-btn" onclick="startQuizWithCount(50)">50 вопросов</button>
+                    <button class="question-count-btn" onclick="startQuizWithCount(100)">100 вопросов</button>
+                    <button class="question-count-btn" onclick="startQuizWithCount(175)" style="background: linear-gradient(135deg, #f093fb, #f5576c);">Все 175 вопросов</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-content" id="quizContent">
+            <div class="header">
+                <button class="finish-early-btn" onclick="finishEarly()" title="Завершить досрочно">✕</button>
+                <h1>⚡ Викторина по Спец.Тех.</h1>
+                <div class="score" id="score">Правильных ответов: 0 из 0</div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="question-info">
+                <div class="question-number" id="questionNumber"></div>
+            </div>
+
+            <div class="question-text" id="questionText"></div>
+
+            <div class="answers" id="answers"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Следующий вопрос →</button>
+        </div>
+
+        <div class="author">
+            Claude AI | Sergey Vurganov
+        </div>
+    </div>
+
+    <script>
+        // Функция переключения темы
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const icon = document.getElementById('theme-icon');
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Меняем иконку
+            icon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        }
+
+        // Загружаем сохраненную тему или устанавливаем темную по умолчанию
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const icon = document.getElementById('theme-icon');
+            
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (icon) {
+                icon.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+            }
+        })();
+
+        const questions = [
+            {
+                category: "Технические мероприятия",
+                question: "Какое из следующих мероприятий НЕ относится к техническим мероприятиям, обеспечивающим безопасность работ в электроустановках?",
+                answers: [
+                    "Проведено необходимое отключение",
+                    "Установлено заземление",
+                    "Проведен инструктаж персонала",
+                    "Вывешены запрещающие плакаты"
+                ],
+                correct: 2
+            },
+            {
+                category: "Технические мероприятия",
+                question: "Что должно быть установлено после проверки отсутствия напряжения?",
+                answers: [
+                    "Ограждение",
+                    "Заземление",
+                    "Освещение",
+                    "Вентиляция"
+                ],
+                correct: 1
+            },
+            {
+                category: "Цветовая маркировка",
+                question: "Какой цвет используется для маркировки защитного нуля (PE)?",
+                answers: [
+                    "Голубой",
+                    "Желто-зеленый",
+                    "Черный",
+                    "Коричневый"
+                ],
+                correct: 1
+            },
+            {
+                category: "Цветовая маркировка",
+                question: "Какой цвет используется для маркировки рабочего нуля (N)?",
+                answers: [
+                    "Желто-зеленый",
+                    "Голубой",
+                    "Черный",
+                    "Коричневый"
+                ],
+                correct: 1
+            },
+            {
+                category: "Цветовая маркировка",
+                question: "Как маркируется объединенный проводник PEN?",
+                answers: [
+                    "Полностью голубой",
+                    "Полностью желто-зеленый",
+                    "Желто-зеленый с голубыми метками на концах",
+                    "Голубой с желто-зелеными метками"
+                ],
+                correct: 2
+            },
+            {
+                category: "Охранные зоны ВЛ",
+                question: "Какое минимальное расстояние охранной зоны для ВЛ напряжением 6-10 кВ?",
+                answers: [
+                    "2 метра",
+                    "10 метров",
+                    "15 метров",
+                    "20 метров"
+                ],
+                correct: 1
+            },
+            {
+                category: "Охранные зоны ВЛ",
+                question: "Какое минимальное расстояние охранной зоны для ВЛ напряжением до 1 кВ?",
+                answers: [
+                    "1 метр",
+                    "2 метра",
+                    "5 метров",
+                    "10 метров"
+                ],
+                correct: 1
+            },
+            {
+                category: "Охранные зоны ВЛ",
+                question: "Какое минимальное расстояние охранной зоны для ВЛ напряжением 20-35 кВ?",
+                answers: [
+                    "10 метров",
+                    "15 метров",
+                    "20 метров",
+                    "25 метров"
+                ],
+                correct: 1
+            },
+            {
+                category: "Охранные зоны КЛ",
+                question: "Какое минимальное расстояние охранной зоны для кабельной линии электропередачи?",
+                answers: [
+                    "0,5 метра",
+                    "1 метр с каждой стороны",
+                    "2 метра с каждой стороны",
+                    "3 метра с каждой стороны"
+                ],
+                correct: 1
+            },
+            {
+                category: "Охранные зоны КЛ",
+                question: "Какое минимальное расстояние охранной зоны для кабельной линии связи?",
+                answers: [
+                    "1 метр с каждой стороны",
+                    "2 метра с каждой стороны",
+                    "3 метра с каждой стороны",
+                    "5 метров с каждой стороны"
+                ],
+                correct: 1
+            },
+            {
+                category: "Типы электроустановок",
+                question: "Что такое действующая электроустановка?",
+                answers: [
+                    "Только электроустановка под напряжением",
+                    "Электроустановка, находящаяся полностью или частично под напряжением либо на которую в любой момент может быть подано напряжение",
+                    "Электроустановка, подключенная к сети",
+                    "Электроустановка, прошедшая испытания"
+                ],
+                correct: 1
+            },
+            {
+                category: "Типы электроустановок",
+                question: "Что такое электроустановка?",
+                answers: [
+                    "Только электрические машины",
+                    "Совокупность машин, аппаратов, линий и вспомогательного оборудования для выработки, преобразования, передачи и распределения электроэнергии",
+                    "Только линии электропередач",
+                    "Только распределительные устройства"
+                ],
+                correct: 1
+            },
+            {
+                category: "Виды работ",
+                question: "Какой вид работ является наиболее безопасным?",
+                answers: [
+                    "Работа под напряжением",
+                    "Работа без снятия напряжения вдали от токоведущих частей",
+                    "Работа со снятием напряжения",
+                    "Все виды одинаково безопасны"
+                ],
+                correct: 2
+            },
+            {
+                category: "Виды работ",
+                question: "Что характерно для работы под напряжением?",
+                answers: [
+                    "Не требует специальных средств защиты",
+                    "Требует специальных разрешений, средств защиты и квалифицированных исполнителей",
+                    "Может выполняться любым персоналом",
+                    "Не требует особых мер безопасности"
+                ],
+                correct: 1
+            },
+            {
+                category: "Распределительные устройства",
+                question: "Что означает аббревиатура ОРУ?",
+                answers: [
+                    "Открытое распределительное устройство",
+                    "Общее распределительное устройство",
+                    "Основное распределительное устройство",
+                    "Оперативное распределительное устройство"
+                ],
+                correct: 0
+            },
+            {
+                category: "Распределительные устройства",
+                question: "Что означает аббревиатура ЗРУ?",
+                answers: [
+                    "Защищенное распределительное устройство",
+                    "Закрытое распределительное устройство",
+                    "Заземленное распределительное устройство",
+                    "Зональное распределительное устройство"
+                ],
+                correct: 1
+            },
+            {
+                category: "Распределительные устройства",
+                question: "Что такое КРУ?",
+                answers: [
+                    "Контрольное распределительное устройство",
+                    "Комплектное распределительное устройство из шкафов или блоков, собранных на заводе",
+                    "Кабельное распределительное устройство",
+                    "Коммутационное распределительное устройство"
+                ],
+                correct: 1
+            },
+            {
+                category: "Безопасные расстояния",
+                question: "Каково минимальное допустимое расстояние до токоведущих частей напряжением до 35 кВ на воздушных линиях?",
+                answers: [
+                    "0,3 метра",
+                    "0,6 метра",
+                    "1,0 метр",
+                    "1,5 метра"
+                ],
+                correct: 1
+            },
+            {
+                category: "Безопасные расстояния",
+                question: "Каково минимальное расстояние от механизмов и грузоподъемных машин до токоведущих частей 1-35 кВ?",
+                answers: [
+                    "0,6 метра",
+                    "1,0 метр",
+                    "1,5 метра",
+                    "2,0 метра"
+                ],
+                correct: 1
+            },
+            {
+                category: "Трансформаторы",
+                question: "Какой элемент масляного трансформатора служит для защиты от перенапряжений?",
+                answers: [
+                    "Расширитель",
+                    "Газовое реле",
+                    "Разрядник",
+                    "Термометр"
+                ],
+                correct: 2
+            },
+            {
+                category: "Трансформаторы",
+                question: "Для чего служит газовое реле в масляном трансформаторе?",
+                answers: [
+                    "Для охлаждения масла",
+                    "Для защиты от внутренних повреждений",
+                    "Для измерения температуры",
+                    "Для контроля уровня масла"
+                ],
+                correct: 1
+            },
+            {
+                category: "Трансформаторы",
+                question: "Что такое расширитель в масляном трансформаторе?",
+                answers: [
+                    "Устройство для слива масла",
+                    "Емкость для компенсации изменения объема масла",
+                    "Устройство охлаждения",
+                    "Система фильтрации"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электродвигатели",
+                question: "Какой тип ротора используется в асинхронных двигателях с улучшенными пусковыми характеристиками?",
+                answers: [
+                    "Короткозамкнутый ротор",
+                    "Фазный ротор",
+                    "Синхронный ротор",
+                    "Постоянный ротор"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электродвигатели",
+                question: "Как называется конструкция короткозамкнутого ротора?",
+                answers: [
+                    "Волчья клетка",
+                    "Беличья клетка",
+                    "Птичья клетка",
+                    "Лисья клетка"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электродвигатели",
+                question: "Для чего служат контактные кольца на фазном роторе?",
+                answers: [
+                    "Для декоративных целей",
+                    "Для подключения реостата через щетки",
+                    "Для охлаждения",
+                    "Для балансировки ротора"
+                ],
+                correct: 1
+            },
+            {
+                category: "Прокладка проводки",
+                question: "Какой способ прокладки проводки предполагает размещение в штробах под штукатуркой?",
+                answers: [
+                    "Открытая проводка",
+                    "Скрытая проводка",
+                    "Наружная проводка",
+                    "Воздушная проводка"
+                ],
+                correct: 1
+            },
+            {
+                category: "Прокладка проводки",
+                question: "Какие способы используются при открытой прокладке проводки?",
+                answers: [
+                    "Только в штробах",
+                    "Непосредственно по поверхности или в трубах, коробах, лотках",
+                    "Только под полом",
+                    "Только в земле"
+                ],
+                correct: 1
+            },
+            {
+                category: "Режимы работы двигателей",
+                question: "Что означает режим работы S1 на шильдике электродвигателя?",
+                answers: [
+                    "Кратковременный режим",
+                    "Повторно-кратковременный режим",
+                    "Продолжительный режим",
+                    "Периодический режим"
+                ],
+                correct: 2
+            },
+            {
+                category: "Режимы работы двигателей",
+                question: "Что означает режим работы S2?",
+                answers: [
+                    "Продолжительный режим",
+                    "Кратковременный режим",
+                    "Повторно-кратковременный режим",
+                    "Непрерывный режим"
+                ],
+                correct: 1
+            },
+            {
+                category: "Режимы работы двигателей",
+                question: "Что характерно для режима S3?",
+                answers: [
+                    "Непрерывная работа",
+                    "Чередование периодов работы и пауз",
+                    "Только паузы",
+                    "Работа на холостом ходу"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электрозащитные средства",
+                question: "Что относится к основным электрозащитным средствам в установках до 1000 В?",
+                answers: [
+                    "Диэлектрические галоши",
+                    "Инструмент с изолирующими рукоятками",
+                    "Диэлектрические коврики",
+                    "Изолирующие подставки"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электрозащитные средства",
+                question: "Какова периодичность поверки диэлектрических перчаток в установках выше 1000 В?",
+                answers: [
+                    "6 месяцев",
+                    "12 месяцев",
+                    "24 месяца",
+                    "36 месяцев"
+                ],
+                correct: 0
+            },
+            {
+                category: "Электрозащитные средства",
+                question: "Какова периодичность поверки изолирующих штанг в установках выше 1000 В?",
+                answers: [
+                    "6 месяцев",
+                    "12 месяцев",
+                    "24 месяца",
+                    "36 месяцев"
+                ],
+                correct: 2
+            },
+            {
+                category: "Электрозащитные средства",
+                question: "Что относится к дополнительным электрозащитным средствам в установках до 1000 В?",
+                answers: [
+                    "Инструмент с изолирующими рукоятками",
+                    "Диэлектрические галоши",
+                    "Указатели напряжения",
+                    "Изолирующие штанги"
+                ],
+                correct: 1
+            },
+            {
+                category: "Воздушные линии",
+                question: "Какой тип опор ВЛ устанавливается в конце линии?",
+                answers: [
+                    "Промежуточные опоры",
+                    "Анкерные опоры",
+                    "Концевые опоры",
+                    "Угловые опоры"
+                ],
+                correct: 2
+            },
+            {
+                category: "Воздушные линии",
+                question: "Какие опоры только поддерживают провода, не держа натяжение?",
+                answers: [
+                    "Промежуточные опоры",
+                    "Анкерные опоры",
+                    "Концевые опоры",
+                    "Угловые опоры"
+                ],
+                correct: 0
+            },
+            {
+                category: "Воздушные линии",
+                question: "Что такое стрела провеса провода?",
+                answers: [
+                    "Длина пролета",
+                    "Расстояние от прямой между точками подвеса до низшей точки провода",
+                    "Высота опоры",
+                    "Расстояние между опорами"
+                ],
+                correct: 1
+            },
+            {
+                category: "Принцип работы двигателей",
+                question: "Какой закон объясняет возникновение силы, вращающей ротор асинхронного двигателя?",
+                answers: [
+                    "Закон Ома",
+                    "Закон Кирхгофа",
+                    "Закон Ампера",
+                    "Закон Джоуля-Ленца"
+                ],
+                correct: 2
+            },
+            {
+                category: "Принцип работы двигателей",
+                question: "Что создает трехфазный ток в статоре асинхронного двигателя?",
+                answers: [
+                    "Постоянное магнитное поле",
+                    "Вращающееся магнитное поле",
+                    "Электростатическое поле",
+                    "Тепловое поле"
+                ],
+                correct: 1
+            },
+            {
+                category: "Трансформаторы",
+                question: "На каком принципе основана работа понижающего масляного трансформатора?",
+                answers: [
+                    "Электростатическая индукция",
+                    "Электромагнитная индукция",
+                    "Термоэлектрический эффект",
+                    "Пьезоэлектрический эффект"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы соединения обмоток",
+                question: "В какой схеме соединения конец первой фазы соединяется с началом второй?",
+                answers: [
+                    "Звезда",
+                    "Треугольник",
+                    "Зигзаг",
+                    "Параллельное соединение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы соединения обмоток",
+                question: "В какой схеме соединения концы обмоток трех фаз соединяются в одну нейтральную точку?",
+                answers: [
+                    "Треугольник",
+                    "Звезда",
+                    "Зигзаг",
+                    "Последовательное соединение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание",
+                question: "Какова периодичность технических осмотров электродвигателей в особо сырых помещениях?",
+                answers: [
+                    "1 месяц",
+                    "1,5-3 месяца",
+                    "6 месяцев",
+                    "12 месяцев"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание",
+                question: "Какое минимальное сопротивление изоляции допустимо при измерении?",
+                answers: [
+                    "0,1 МОм",
+                    "0,5 МОм",
+                    "1,0 МОм",
+                    "2,0 МОм"
+                ],
+                correct: 1
+            },
+            {
+                category: "Аппаратура управления",
+                question: "Какой элемент магнитного пускателя создает магнитное поле?",
+                answers: [
+                    "Якорь",
+                    "Катушка",
+                    "Контакты",
+                    "Траверса"
+                ],
+                correct: 1
+            },
+            {
+                category: "Аппаратура управления",
+                question: "Что происходит при подаче тока на катушку реле?",
+                answers: [
+                    "Катушка нагревается",
+                    "Катушка притягивает якорь, замыкая контакты",
+                    "Катушка взрывается",
+                    "Ничего не происходит"
+                ],
+                correct: 1
+            },
+            {
+                category: "Коммутационная аппаратура",
+                question: "Чем отличается разъединитель от выключателя?",
+                answers: [
+                    "Разъединитель не имеет дугогашения и отключается только без нагрузки",
+                    "Разъединитель работает под нагрузкой",
+                    "Разъединитель имеет лучшее дугогашение",
+                    "Никаких отличий нет"
+                ],
+                correct: 0
+            },
+            {
+                category: "Коммутационная аппаратура",
+                question: "Для чего служит короткозамыкатель?",
+                answers: [
+                    "Для отключения нагрузки",
+                    "Для преднамеренного создания КЗ, чтобы вызвать срабатывание защиты",
+                    "Для измерения тока",
+                    "Для охлаждения оборудования"
+                ],
+                correct: 1
+            },
+            {
+                category: "Обслуживание ВЛ",
+                question: "Как часто проводятся верховые осмотры воздушных линий?",
+                answers: [
+                    "Раз в год",
+                    "Раз в 3 года",
+                    "Раз в 6 лет",
+                    "Раз в 10 лет"
+                ],
+                correct: 2
+            },
+            {
+                category: "Обслуживание ВЛ",
+                question: "Когда проводятся внеочередные осмотры ВЛ?",
+                answers: [
+                    "По желанию персонала",
+                    "После аварий или стихийных бедствий",
+                    "Только зимой",
+                    "Только летом"
+                ],
+                correct: 1
+            },
+            {
+                category: "Группы по электробезопасности",
+                question: "Что должен уметь делать персонал с III группой по электробезопасности?",
+                answers: [
+                    "Только выполнять работы под надзором",
+                    "Вести надзор и оказывать первую помощь",
+                    "Только оказывать первую помощь",
+                    "Работать только со снятием напряжения"
+                ],
+                correct: 1
+            },
+            {
+                category: "Типы двигателей",
+                question: "Какой тип двигателей работает с постоянной скоростью?",
+                answers: [
+                    "Асинхронные",
+                    "Синхронные",
+                    "Постоянного тока",
+                    "Однофазные"
+                ],
+                correct: 1
+            },
+            {
+                category: "Типы двигателей",
+                question: "Какой тип двигателей имеет скорость ротора, отстающую от поля статора?",
+                answers: [
+                    "Синхронные",
+                    "Асинхронные",
+                    "Постоянного тока",
+                    "Шаговые"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы соединения обмоток двигателя",
+                question: "Какую схему соединения обмоток следует использовать для двигателя 220/380В при напряжении сети 380В?",
+                answers: [
+                    "Треугольник",
+                    "Звезда",
+                    "Зигзаг",
+                    "Параллельное соединение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы соединения обмоток двигателя",
+                question: "Какую схему соединения обмоток следует использовать для двигателя 220/380В при напряжении сети 220В?",
+                answers: [
+                    "Звезда",
+                    "Треугольник",
+                    "Зигзаг",
+                    "Последовательное соединение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Кабельные линии",
+                question: "Какая минимальная глубина прокладки кабельных линий в траншеях?",
+                answers: [
+                    "50 см",
+                    "70 см",
+                    "100 см",
+                    "150 см"
+                ],
+                correct: 1
+            },
+            {
+                category: "Кабельные линии",
+                question: "Чем защищают кабели в траншеях сверху?",
+                answers: [
+                    "Только землей",
+                    "Кирпичом или защитной лентой (ЛЗС)",
+                    "Деревом",
+                    "Ничем"
+                ],
+                correct: 1
+            },
+            {
+                category: "Кабельные линии",
+                question: "Как укладывается кабель в траншее?",
+                answers: [
+                    "Строго прямо",
+                    "Змейкой с запасом 0,2-0,3%",
+                    "По диагонали",
+                    "Без запаса"
+                ],
+                correct: 1
+            },
+            {
+                category: "Автоматические выключатели",
+                question: "Какой расцепитель срабатывает при коротком замыкании?",
+                answers: [
+                    "Тепловой",
+                    "Электромагнитный",
+                    "Гидравлический",
+                    "Пневматический"
+                ],
+                correct: 1
+            },
+            {
+                category: "Автоматические выключатели",
+                question: "Какой расцепитель срабатывает при перегрузке?",
+                answers: [
+                    "Электромагнитный",
+                    "Тепловой (биметаллическая пластина)",
+                    "Гидравлический",
+                    "Механический"
+                ],
+                correct: 1
+            },
+            {
+                category: "Системы заземления",
+                question: "Какая система заземления является самой безопасной?",
+                answers: [
+                    "TN-C",
+                    "TN-S",
+                    "TN-C-S",
+                    "TT"
+                ],
+                correct: 1
+            },
+            {
+                category: "Системы заземления",
+                question: "В какой системе заземления PEN-проводник совмещает функции заземления и нуля на всем протяжении?",
+                answers: [
+                    "TN-S",
+                    "TN-C",
+                    "TN-C-S",
+                    "TT"
+                ],
+                correct: 1
+            },
+            {
+                category: "Системы заземления",
+                question: "Где разделяется PEN-проводник в системе TN-C-S?",
+                answers: [
+                    "На подстанции",
+                    "На вводе в здание",
+                    "В каждой розетке",
+                    "Не разделяется"
+                ],
+                correct: 1
+            },
+            {
+                category: "Предохранители",
+                question: "Что происходит с плавкой вставкой предохранителя при превышении номинального тока?",
+                answers: [
+                    "Она нагревается и перегорает",
+                    "Она увеличивается в размерах",
+                    "Она замыкает контакты",
+                    "Ничего не происходит"
+                ],
+                correct: 0
+            },
+            {
+                category: "Предохранители",
+                question: "Что используется для гашения дуги в предохранителях высокого напряжения?",
+                answers: [
+                    "Вода",
+                    "Песок (кварцевый)",
+                    "Воздух",
+                    "Масло"
+                ],
+                correct: 1
+            },
+            {
+                category: "Силовые кабели",
+                question: "Что означает маркировка 'нг' в обозначении кабеля ВВГнг?",
+                answers: [
+                    "Низкое напряжение",
+                    "Негорючий",
+                    "Наружная гидроизоляция",
+                    "Нормальная гибкость"
+                ],
+                correct: 1
+            },
+            {
+                category: "Силовые кабели",
+                question: "Что означает буква 'А' в начале маркировки силового кабеля?",
+                answers: [
+                    "Армированный",
+                    "Алюминиевая жила",
+                    "Автоматический",
+                    "Асбестовая изоляция"
+                ],
+                correct: 1
+            },
+            {
+                category: "Силовые кабели",
+                question: "Что означает буква 'Г' в конце маркировки кабеля?",
+                answers: [
+                    "Гибкий",
+                    "Герметичный",
+                    "Голый (без защиты поверх оболочки)",
+                    "Горючий"
+                ],
+                correct: 2
+            },
+            {
+                category: "Материалы",
+                question: "Какой материал относится к проводниковым и используется для изготовления жил кабелей?",
+                answers: [
+                    "Фарфор",
+                    "Медь",
+                    "Резина",
+                    "Пластмасса"
+                ],
+                correct: 1
+            },
+            {
+                category: "Материалы",
+                question: "Какое преимущество меди перед алюминием?",
+                answers: [
+                    "Легче по весу",
+                    "Дешевле",
+                    "Меньше окисляется и более пластична",
+                    "Выше сопротивление"
+                ],
+                correct: 2
+            },
+            {
+                category: "Материалы",
+                question: "Какой недостаток у алюминия как проводникового материала?",
+                answers: [
+                    "Высокая цена",
+                    "Большой вес",
+                    "Ломкий и текучий в контактах",
+                    "Низкая проводимость"
+                ],
+                correct: 2
+            },
+            {
+                category: "Диэлектрики",
+                question: "Что относится к диэлектрическим материалам?",
+                answers: [
+                    "Медь",
+                    "Алюминий",
+                    "Фарфор",
+                    "Сталь"
+                ],
+                correct: 2
+            },
+            {
+                category: "Диэлектрики",
+                question: "Для чего используется трансформаторное масло?",
+                answers: [
+                    "Для смазки деталей",
+                    "Для охлаждения и изоляции в трансформаторах",
+                    "Для очистки оборудования",
+                    "Для покраски"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание",
+                question: "Что включает техническое обслуживание (ТО)?",
+                answers: [
+                    "Полная замена оборудования",
+                    "Контроль и поддержание работы без разборки",
+                    "Капитальный ремонт",
+                    "Модернизация"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание",
+                question: "Что характерно для текущего ремонта?",
+                answers: [
+                    "Без разборки оборудования",
+                    "Восстановление работоспособности с заменой отдельных частей",
+                    "Полное обновление",
+                    "Только осмотр"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание",
+                question: "Что характерно для капитального ремонта?",
+                answers: [
+                    "Только очистка",
+                    "Замена одной детали",
+                    "Полное восстановление ресурса",
+                    "Простой осмотр"
+                ],
+                correct: 2
+            },
+            {
+                category: "Трансформаторы по назначению",
+                question: "Какие бывают трансформаторы по назначению?",
+                answers: [
+                    "Только силовые",
+                    "Общего и специального назначения, трансформаторы тока",
+                    "Только измерительные",
+                    "Только автотрансформаторы"
+                ],
+                correct: 1
+            },
+            {
+                category: "Трансформаторы по охлаждению",
+                question: "Какие типы охлаждения используются в трансформаторах?",
+                answers: [
+                    "Только водяное",
+                    "Масляное, сухое (воздушное), элегазовое",
+                    "Только воздушное",
+                    "Только масляное"
+                ],
+                correct: 1
+            },
+            {
+                category: "Контрольные кабели",
+                question: "Для чего используются контрольные кабели?",
+                answers: [
+                    "Для передачи электроэнергии",
+                    "Для передачи сигналов управления",
+                    "Для заземления",
+                    "Для освещения"
+                ],
+                correct: 1
+            },
+            {
+                category: "Контрольные кабели",
+                question: "Сколько жил может быть в контрольном кабеле?",
+                answers: [
+                    "1-3",
+                    "4-61",
+                    "Только 4",
+                    "До 100"
+                ],
+                correct: 1
+            },
+            {
+                category: "Контрольные кабели",
+                question: "Что означает буква 'К' в начале маркировки кабеля?",
+                answers: [
+                    "Короткий",
+                    "Контрольный",
+                    "Круглый",
+                    "Комбинированный"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы пуска двигателей",
+                question: "Что используется в схеме прямого пуска для защиты двигателя?",
+                answers: [
+                    "Только автоматический выключатель",
+                    "Автоматический выключатель и тепловое реле",
+                    "Только предохранители",
+                    "Никакая защита не нужна"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы пуска двигателей",
+                question: "Что обеспечивает реверсивный пуск двигателя?",
+                answers: [
+                    "Один пускатель",
+                    "Два пускателя с перестановкой двух фаз",
+                    "Три пускателя",
+                    "Частотный преобразователь"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы пуска двигателей",
+                question: "Зачем нужна блокировка в реверсивной схеме?",
+                answers: [
+                    "Для красоты схемы",
+                    "Для предотвращения одновременного включения двух пускателей",
+                    "Для экономии электроэнергии",
+                    "Для увеличения скорости"
+                ],
+                correct: 1
+            },
+            {
+                category: "Контакты аппаратуры",
+                question: "Какие требования к материалу контактов?",
+                answers: [
+                    "Только низкая цена",
+                    "Высокая электро- и теплопроводность, дугостойкость, износостойкость",
+                    "Только красивый внешний вид",
+                    "Магнитные свойства"
+                ],
+                correct: 1
+            },
+            {
+                category: "УЗО и дифавтоматы",
+                question: "Что такое дифференциальный автоматический выключатель?",
+                answers: [
+                    "Обычный автомат",
+                    "Комбинированный аппарат: УЗО + автоматический выключатель",
+                    "Только УЗО",
+                    "Рубильник"
+                ],
+                correct: 1
+            },
+            {
+                category: "УЗО и дифавтоматы",
+                question: "От чего защищает УЗО?",
+                answers: [
+                    "От короткого замыкания",
+                    "От перегрузки",
+                    "От утечки тока на землю",
+                    "От перенапряжения"
+                ],
+                correct: 2
+            },
+            {
+                category: "УЗО и дифавтоматы",
+                question: "От чего НЕ защищает УЗО?",
+                answers: [
+                    "От утечки тока",
+                    "От поражения электротоком при касании фазы",
+                    "От короткого замыкания и перегрузки",
+                    "От замыкания на корпус"
+                ],
+                correct: 2
+            },
+            {
+                category: "Нейтрали",
+                question: "Как работает глухозаземленная нейтраль при замыкании на корпус?",
+                answers: [
+                    "Система продолжает работать",
+                    "Происходит короткое замыкание, автомат отключает участок",
+                    "Ничего не происходит",
+                    "Повышается напряжение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Нейтрали",
+                question: "Сколько времени может работать система с изолированной нейтралью при замыкании фазы на землю?",
+                answers: [
+                    "Мгновенно отключается",
+                    "До 2-6 часов",
+                    "Бесконечно",
+                    "1 минуту"
+                ],
+                correct: 1
+            },
+            {
+                category: "Нейтрали",
+                question: "Что происходит с напряжением на здоровых фазах при замыкании одной фазы на землю в изолированной нейтрали?",
+                answers: [
+                    "Остается прежним",
+                    "Падает до нуля",
+                    "Возрастает до линейного",
+                    "Становится отрицательным"
+                ],
+                correct: 2
+            },
+            {
+                category: "Нейтрали",
+                question: "Где применяется эффективно-заземленная нейтраль?",
+                answers: [
+                    "В сетях до 1 кВ",
+                    "В сетях 110 кВ и выше",
+                    "В сетях 10 кВ",
+                    "Не применяется"
+                ],
+                correct: 1
+            },
+            {
+                category: "Предохранители",
+                question: "Что такое металлургический эффект в предохранителях?",
+                answers: [
+                    "Плавление металла",
+                    "Капля олова растворяет тугоплавкий металл, ускоряя перегорание",
+                    "Окисление металла",
+                    "Намагничивание металла"
+                ],
+                correct: 1
+            },
+            {
+                category: "Выключатели в РУ",
+                question: "Какие выключатели применяются в РУ до 1000 В?",
+                answers: [
+                    "Только масляные",
+                    "Автоматические выключатели, рубильники",
+                    "Только элегазовые",
+                    "Только вакуумные"
+                ],
+                correct: 1
+            },
+            {
+                category: "Выключатели в РУ",
+                question: "Какие выключатели применяются в РУ выше 1000 В?",
+                answers: [
+                    "Только рубильники",
+                    "Масляные, вакуумные, элегазовые",
+                    "Только автоматические",
+                    "Только воздушные"
+                ],
+                correct: 1
+            },
+            {
+                category: "Ввод КЛ в здание",
+                question: "Через что должны вводиться кабели в здание?",
+                answers: [
+                    "Прямо через стену",
+                    "Через трубы с гидроизоляцией",
+                    "Через окна",
+                    "Через вентиляцию"
+                ],
+                correct: 1
+            },
+            {
+                category: "Ввод КЛ в здание",
+                question: "Какой минимальный диаметр трубы для ввода кабеля?",
+                answers: [
+                    "30 мм",
+                    "50 мм",
+                    "70 мм",
+                    "100 мм"
+                ],
+                correct: 1
+            },
+            {
+                category: "Ввод КЛ в здание",
+                question: "Сколько кабелей можно прокладывать в одной трубе при вводе?",
+                answers: [
+                    "Один кабель",
+                    "Два кабеля",
+                    "Три кабеля",
+                    "Неограниченно"
+                ],
+                correct: 0
+            },
+            {
+                category: "Ввод КЛ в здание",
+                question: "Какой запас кабеля оставляют при вводе?",
+                answers: [
+                    "Без запаса",
+                    "1 метр полукругом",
+                    "2 метра кольцом",
+                    "5 метров"
+                ],
+                correct: 1
+            },
+            {
+                category: "Перемотка статора",
+                question: "Какая первая операция при перемотке статора?",
+                answers: [
+                    "Укладка новых катушек",
+                    "Дефектация и удаление старой обмотки",
+                    "Пропитка лаком",
+                    "Сборка двигателя"
+                ],
+                correct: 1
+            },
+            {
+                category: "Перемотка статора",
+                question: "Чем завершается процесс перемотки статора?",
+                answers: [
+                    "Укладкой катушек",
+                    "Очисткой пазов",
+                    "Пропиткой лаком и сушкой в печи",
+                    "Намоткой катушек"
+                ],
+                correct: 2
+            },
+            {
+                category: "Трансформаторные подстанции",
+                question: "Что является основным элементом трансформаторной подстанции?",
+                answers: [
+                    "Выключатель",
+                    "Силовой трансформатор",
+                    "Предохранители",
+                    "Измерительные приборы"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электрические схемы",
+                question: "Какая схема отражает основные функциональные части?",
+                answers: [
+                    "Монтажная",
+                    "Структурная",
+                    "Принципиальная",
+                    "Схема соединений"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электрические схемы",
+                question: "Какая схема показывает полный состав элементов и связей?",
+                answers: [
+                    "Структурная",
+                    "Принципиальная (полная)",
+                    "Монтажная",
+                    "Функциональная"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электрические схемы",
+                question: "Какая схема показывает реальное расположение проводов?",
+                answers: [
+                    "Структурная",
+                    "Принципиальная",
+                    "Монтажная (схема соединений)",
+                    "Функциональная"
+                ],
+                correct: 2
+            },
+            {
+                category: "Воздушные линии",
+                question: "Что такое габарит линии?",
+                answers: [
+                    "Длина пролета",
+                    "Расстояние от провода до земли",
+                    "Высота опоры",
+                    "Стрела провеса"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электродвигатели конструкция",
+                question: "Из чего состоит статор асинхронного двигателя?",
+                answers: [
+                    "Из медных стержней",
+                    "Из цилиндрического сердечника с пазами для обмоток",
+                    "Из вала и подшипников",
+                    "Из контактных колец"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электродвигатели конструкция",
+                question: "Что входит в конструктивные детали электродвигателя?",
+                answers: [
+                    "Только обмотки",
+                    "Вал, подшипники, лапы, щиты, вентилятор",
+                    "Только ротор",
+                    "Только статор"
+                ],
+                correct: 1
+            },
+            {
+                category: "Разрядники",
+                question: "Из чего состоит устройство разрядника?",
+                answers: [
+                    "Только из проводов",
+                    "Из искровых промежутков и нелинейных резисторов",
+                    "Только из изоляторов",
+                    "Из катушки"
+                ],
+                correct: 1
+            },
+            {
+                category: "Разрядники",
+                question: "Когда срабатывает разрядник?",
+                answers: [
+                    "При нормальном напряжении",
+                    "При перенапряжении",
+                    "При отключении нагрузки",
+                    "Постоянно"
+                ],
+                correct: 1
+            },
+            {
+                category: "Магнитный пускатель",
+                question: "Что происходит с контактами при подаче тока на катушку пускателя?",
+                answers: [
+                    "Размыкаются",
+                    "Притягиваются и замыкаются",
+                    "Ничего не происходит",
+                    "Плавятся"
+                ],
+                correct: 1
+            },
+            {
+                category: "Отделитель и короткозамыкатель",
+                question: "Когда срабатывает отделитель?",
+                answers: [
+                    "При наличии тока",
+                    "Автоматически отключает обесточенную цепь в бестоковую паузу",
+                    "При перегрузке",
+                    "Никогда"
+                ],
+                correct: 1
+            },
+            {
+                category: "Обязанности персонала",
+                question: "Что входит в обязанности электромонтера?",
+                answers: [
+                    "Только уборка помещений",
+                    "ТО, ремонт, монтаж, устранение повреждений, измерения",
+                    "Только контроль",
+                    "Только документация"
+                ],
+                correct: 1
+            },
+            {
+                category: "Группы по электробезопасности",
+                question: "Что должен знать персонал с III группой?",
+                answers: [
+                    "Только правила эксплуатации",
+                    "Электротехнику, устройство установки, правила применения защитных средств, первую помощь",
+                    "Только первую помощь",
+                    "Ничего особенного"
+                ],
+                correct: 1
+            },
+            {
+                category: "Типы двигателей характеристики",
+                question: "Какое преимущество у двигателей постоянного тока?",
+                answers: [
+                    "Простота конструкции",
+                    "Низкая цена",
+                    "Плавная регулировка скорости",
+                    "Не требуют обслуживания"
+                ],
+                correct: 2
+            },
+            {
+                category: "Типы двигателей характеристики",
+                question: "Какое преимущество у асинхронных двигателей?",
+                answers: [
+                    "Сложная конструкция",
+                    "Простота, надежность, дешевизна",
+                    "Высокая цена",
+                    "Требуют частого ремонта"
+                ],
+                correct: 1
+            },
+            {
+                category: "Прокладка КЛ особенности",
+                question: "На каком устройстве раскатывают кабель?",
+                answers: [
+                    "На тележке",
+                    "На барабане на домкратах",
+                    "Вручную",
+                    "На кране"
+                ],
+                correct: 1
+            },
+            {
+                category: "Прокладка КЛ особенности",
+                question: "Как прокладывают кабель под дорогами?",
+                answers: [
+                    "В открытой траншее",
+                    "В трубах или проколом",
+                    "По воздуху",
+                    "По поверхности"
+                ],
+                correct: 1
+            },
+            {
+                category: "Системы заземления особенности",
+                question: "Обязательно ли применение УЗО в системе TT?",
+                answers: [
+                    "Нет",
+                    "Да, обязательно",
+                    "По желанию",
+                    "Запрещено"
+                ],
+                correct: 1
+            },
+            {
+                category: "Классификация ПС",
+                question: "Как классифицируются подстанции по мощности?",
+                answers: [
+                    "Только большой мощности",
+                    "Малой, средней и большой мощности",
+                    "Только малой мощности",
+                    "Не классифицируются"
+                ],
+                correct: 1
+            },
+            {
+                category: "Типы ремонтов",
+                question: "Что включает модернизация оборудования?",
+                answers: [
+                    "Простую очистку",
+                    "Обновление под новые требования",
+                    "Только покраску",
+                    "Демонтаж"
+                ],
+                correct: 1
+            },
+            {
+                category: "Заземление",
+                question: "Что такое заземление?",
+                answers: [
+                    "Изоляция проводов",
+                    "Преднамеренное электрическое соединение с землей для обеспечения электробезопасности",
+                    "Отключение электроустановки",
+                    "Проверка напряжения"
+                ],
+                correct: 1
+            },
+            {
+                category: "Плакаты безопасности",
+                question: "Какой плакат вывешивается после установки заземления?",
+                answers: [
+                    "НЕ ВКЛЮЧАТЬ",
+                    "ЗАЗЕМЛЕНО",
+                    "РАБОТА ПОД НАПРЯЖЕНИЕМ",
+                    "СТОЙ"
+                ],
+                correct: 1
+            },
+            {
+                category: "Плакаты безопасности",
+                question: "Где вывешиваются запрещающие плакаты?",
+                answers: [
+                    "На рабочем месте",
+                    "На приводах ручного управления и ключах дистанционного управления",
+                    "На двери помещения",
+                    "На оборудовании"
+                ],
+                correct: 1
+            },
+            {
+                category: "Цветовая маркировка фазы",
+                question: "Нормируется ли цвет фазного проводника (L)?",
+                answers: [
+                    "Да, только черный",
+                    "Да, только коричневый",
+                    "Нет, цвет не нормируется",
+                    "Да, только серый"
+                ],
+                correct: 2
+            },
+            {
+                category: "Охранная зона",
+                question: "Что такое охранная зона ВЛ?",
+                answers: [
+                    "Территория вокруг подстанции",
+                    "Зона вдоль линии, ограниченная вертикальными плоскостями от крайних проводов",
+                    "Площадка для обслуживания",
+                    "Помещение с оборудованием"
+                ],
+                correct: 1
+            },
+            {
+                category: "Охранные зоны КЛ под тротуарами",
+                question: "Какое расстояние охранной зоны КЛ под тротуарами в сторону проезжей части?",
+                answers: [
+                    "0,6 метра",
+                    "1 метр",
+                    "1,5 метра",
+                    "2 метра"
+                ],
+                correct: 1
+            },
+            {
+                category: "Охранные зоны КЛ под тротуарами",
+                question: "Какое расстояние охранной зоны КЛ под тротуарами в противоположную сторону?",
+                answers: [
+                    "0,6 метра",
+                    "1 метр",
+                    "1,5 метра",
+                    "2 метра"
+                ],
+                correct: 0
+            },
+            {
+                category: "Работы вдали от ТВЧ",
+                question: "Требуются ли специальные технические мероприятия при работе без снятия напряжения вдали от токоведущих частей?",
+                answers: [
+                    "Да, всегда",
+                    "Нет, не требуются",
+                    "Только при высоком напряжении",
+                    "Только в сырых помещениях"
+                ],
+                correct: 1
+            },
+            {
+                category: "Работы под напряжением допуск",
+                question: "Что требуется для работы под напряжением?",
+                answers: [
+                    "Только защитные очки",
+                    "Специальные разрешения и квалифицированные исполнители",
+                    "Простой инструктаж",
+                    "Ничего особенного"
+                ],
+                correct: 1
+            },
+            {
+                category: "ВРУ расшифровка",
+                question: "Что означает аббревиатура ВРУ?",
+                answers: [
+                    "Высоковольтное распределительное устройство",
+                    "Вводное распределительное устройство",
+                    "Временное распределительное устройство",
+                    "Внутреннее распределительное устройство"
+                ],
+                correct: 1
+            },
+            {
+                category: "РУ определение",
+                question: "Что такое распределительное устройство?",
+                answers: [
+                    "Только выключатели",
+                    "Электроустановка для приема и распределения электроэнергии с коммутационными аппаратами",
+                    "Только трансформаторы",
+                    "Помещение для персонала"
+                ],
+                correct: 1
+            },
+            {
+                category: "Безопасное расстояние определение",
+                question: "Что такое безопасное расстояние?",
+                answers: [
+                    "Любое расстояние больше 1 метра",
+                    "Наименьшее расстояние, при котором человек находится вне опасной зоны",
+                    "Расстояние между опорами",
+                    "Высота установки оборудования"
+                ],
+                correct: 1
+            },
+            {
+                category: "Безопасное расстояние в ЭУ",
+                question: "Нормируется ли безопасное расстояние в электроустановках (кроме ВЛ) до 35 кВ?",
+                answers: [
+                    "Да, 1 метр",
+                    "Да, 0,6 метра",
+                    "Не нормируется (без прикосновения)",
+                    "Да, 2 метра"
+                ],
+                correct: 2
+            },
+            {
+                category: "Разборка трансформатора порядок",
+                question: "Что делают первым при разборке масляного трансформатора?",
+                answers: [
+                    "Снимают крышку",
+                    "Отключают от сети, устанавливают заземления, сливают масло",
+                    "Демонтируют обмотки",
+                    "Снимают вводы"
+                ],
+                correct: 1
+            },
+            {
+                category: "Разборка трансформатора газовое реле",
+                question: "На каком этапе демонтируют газовое реле при разборке трансформатора?",
+                answers: [
+                    "В самом начале",
+                    "После слива масла, перед вскрытием крышки",
+                    "В конце разборки",
+                    "Его не демонтируют"
+                ],
+                correct: 1
+            },
+            {
+                category: "Разборка электродвигателя",
+                question: "С чего начинается разборка асинхронного электродвигателя?",
+                answers: [
+                    "Со снятия ротора",
+                    "С отключения кабеля питания от коробки выводов",
+                    "Со снятия статора",
+                    "С демонтажа подшипников"
+                ],
+                correct: 1
+            },
+            {
+                category: "Разборка электродвигателя шкив",
+                question: "Чем снимают шкив или полумуфту с вала двигателя?",
+                answers: [
+                    "Молотком",
+                    "Съемником",
+                    "Руками",
+                    "Отверткой"
+                ],
+                correct: 1
+            },
+            {
+                category: "Сборка электродвигателя проверка",
+                question: "Что проверяют после сборки электродвигателя?",
+                answers: [
+                    "Только внешний вид",
+                    "Свободный ход ротора от руки",
+                    "Только изоляцию",
+                    "Только вес двигателя"
+                ],
+                correct: 1
+            },
+            {
+                category: "Открытая проводка места",
+                question: "Где прокладывается открытая электропроводка?",
+                answers: [
+                    "Только в земле",
+                    "По поверхностям стен, потолков, строительных элементов",
+                    "Только под полом",
+                    "Только в штробах"
+                ],
+                correct: 1
+            },
+            {
+                category: "Крепление двигателей на лапах",
+                question: "Как крепится двигатель с креплением на лапах?",
+                answers: [
+                    "К стене",
+                    "На фундамент или раму через отверстия в лапах болтами",
+                    "На тросах",
+                    "На магнитах"
+                ],
+                correct: 1
+            },
+            {
+                category: "Крепление двигателей фланцевое",
+                question: "Где используется фланцевое крепление двигателя?",
+                answers: [
+                    "Только на полу",
+                    "Двигатель крепится фланцем к корпусу механизма (насоса, редуктора)",
+                    "Только на стене",
+                    "Только на потолке"
+                ],
+                correct: 1
+            },
+            {
+                category: "Трансформаторная подстанция определение",
+                question: "Для чего предназначена трансформаторная подстанция?",
+                answers: [
+                    "Только для хранения оборудования",
+                    "Для преобразования и распределения электрической энергии",
+                    "Только для учета электроэнергии",
+                    "Для отдыха персонала"
+                ],
+                correct: 1
+            },
+            {
+                category: "Состав ТП",
+                question: "Что входит в состав трансформаторной подстанции?",
+                answers: [
+                    "Только трансформатор",
+                    "Трансформатор, шины, коммутационные аппараты, системы защиты и измерения",
+                    "Только измерительные приборы",
+                    "Только кабели"
+                ],
+                correct: 1
+            },
+            {
+                category: "Электрозащитные средства определение",
+                question: "Для чего служат электрозащитные средства?",
+                answers: [
+                    "Для украшения",
+                    "Для защиты людей от поражения электрическим током",
+                    "Для измерения напряжения",
+                    "Для переноски оборудования"
+                ],
+                correct: 1
+            },
+            {
+                category: "Основные средства до 1000В",
+                question: "Что является основным электрозащитным средством в установках до 1000 В?",
+                answers: [
+                    "Диэлектрические боты",
+                    "Указатели напряжения",
+                    "Диэлектрические коврики",
+                    "Каска"
+                ],
+                correct: 1
+            },
+            {
+                category: "Дополнительные средства до 1000В",
+                question: "Могут ли дополнительные электрозащитные средства использоваться самостоятельно?",
+                answers: [
+                    "Да, всегда",
+                    "Нет, только вместе с основными",
+                    "Да, но только в сухую погоду",
+                    "Зависит от напряжения"
+                ],
+                correct: 1
+            },
+            {
+                category: "Периодичность поверки инструмента",
+                question: "Какова периодичность поверки инструмента с изолирующими рукоятками?",
+                answers: [
+                    "6 месяцев",
+                    "12 месяцев",
+                    "24 месяца",
+                    "36 месяцев"
+                ],
+                correct: 1
+            },
+            {
+                category: "Периодичность поверки диэлектрических бот",
+                question: "Какова периодичность поверки диэлектрических бот в установках выше 1000 В?",
+                answers: [
+                    "6 месяцев",
+                    "12 месяцев",
+                    "24 месяца",
+                    "36 месяцев"
+                ],
+                correct: 3
+            },
+            {
+                category: "Скрытая проводка определение",
+                question: "Где прокладывается скрытая электропроводка?",
+                answers: [
+                    "По поверхности стен",
+                    "Внутри конструктивных элементов зданий",
+                    "По потолку",
+                    "В трубах по стенам"
+                ],
+                correct: 1
+            },
+            {
+                category: "Скрытая проводка способы",
+                question: "Какой способ НЕ относится к скрытой проводке?",
+                answers: [
+                    "В штробах под штукатуркой",
+                    "В пустотах строительных конструкций",
+                    "По поверхности стен на скобах",
+                    "За подвесными потолками"
+                ],
+                correct: 2
+            },
+            {
+                category: "Режим S2",
+                question: "Успевает ли двигатель полностью нагреться в режиме S2?",
+                answers: [
+                    "Да, всегда",
+                    "Нет, работа недостаточна для нагрева до установившейся температуры",
+                    "Иногда",
+                    "Зависит от нагрузки"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схема структурная",
+                question: "Что показывает структурная схема?",
+                answers: [
+                    "Точное расположение проводов",
+                    "Основные функциональные части и их взаимосвязи",
+                    "Детальное устройство каждого элемента",
+                    "Только размеры оборудования"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схема монтажная назначение",
+                question: "Для чего используется монтажная схема?",
+                answers: [
+                    "Для понимания принципа работы",
+                    "Для выполнения монтажа (показывает реальное расположение проводов)",
+                    "Для расчета мощности",
+                    "Для заказа оборудования"
+                ],
+                correct: 1
+            },
+            {
+                category: "Опоры ВЛ промежуточные",
+                question: "Какую функцию выполняют промежуточные опоры?",
+                answers: [
+                    "Держат натяжение проводов",
+                    "Только поддерживают провода",
+                    "Ограничивают разрушения",
+                    "Поворачивают линию"
+                ],
+                correct: 1
+            },
+            {
+                category: "Опоры ВЛ анкерные",
+                question: "Для чего нужны анкерные опоры?",
+                answers: [
+                    "Только для поддержки",
+                    "Жестко крепят провода и ограничивают разрушения",
+                    "Для поворотов",
+                    "Для освещения"
+                ],
+                correct: 1
+            },
+            {
+                category: "Опоры ВЛ угловые",
+                question: "Где устанавливаются угловые опоры?",
+                answers: [
+                    "В начале линии",
+                    "На поворотах трассы",
+                    "В конце линии",
+                    "Через каждые 100 метров"
+                ],
+                correct: 1
+            },
+            {
+                category: "Длина пролета ВЛ",
+                question: "Что такое длина пролета ВЛ?",
+                answers: [
+                    "Высота опоры",
+                    "Расстояние между центрами опор",
+                    "Длина провода",
+                    "Стрела провеса"
+                ],
+                correct: 1
+            },
+            {
+                category: "Статор материал",
+                question: "Из какого материала изготовлен сердечник статора?",
+                answers: [
+                    "Из меди",
+                    "Из листов электротехнической стали",
+                    "Из алюминия",
+                    "Из пластика"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание двигателей",
+                question: "Что включает в себя ежедневное техническое обслуживание электродвигателей?",
+                answers: [
+                    "Только внешний осмотр",
+                    "Очистка от пыли, проверка затяжки болтов и заземления, осмотр контактов, проверка смазки, замер изоляции, проверка шумов и нагрева",
+                    "Только замена масла",
+                    "Только проверка напряжения"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание двигателей",
+                question: "Какова периодичность технических осмотров двигателей в сухих и влажных помещениях?",
+                answers: [
+                    "1 месяц",
+                    "3 месяца",
+                    "6 месяцев",
+                    "12 месяцев"
+                ],
+                correct: 1
+            },
+            {
+                category: "Техническое обслуживание двигателей",
+                question: "Какова периодичность технических осмотров двигателей в особо сырых, химически активных и пыльных помещениях?",
+                answers: [
+                    "1 месяц",
+                    "1,5-3 месяца",
+                    "6 месяцев",
+                    "12 месяцев"
+                ],
+                correct: 1
+            },
+            {
+                category: "Аппаратура управления отличия",
+                question: "Чем отличается принцип работы магнитного пускателя от реле?",
+                answers: [
+                    "Ничем не отличаются, это одно и то же",
+                    "Пускатель коммутирует силовые цепи большой мощности, реле - цепи управления малой мощности",
+                    "Пускатель работает только на переменном токе, реле - только на постоянном",
+                    "Реле мощнее пускателя"
+                ],
+                correct: 1
+            },
+            {
+                category: "Схемы соединения двигателей опасность",
+                question: "Можно ли запустить электродвигатель по схеме треугольник, если он предназначен для схемы звезда?",
+                answers: [
+                    "Да, это безопасно",
+                    "Нет, двигатель сгорит из-за превышения номинального напряжения на обмотках в √3 раз",
+                    "Да, но только кратковременно",
+                    "Можно, если снизить напряжение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Обязанности электромонтера детально",
+                question: "Что НЕ входит в обязанности электромонтера по обслуживанию электрооборудования?",
+                answers: [
+                    "Техническое обслуживание оборудования",
+                    "Ремонт и монтаж электрооборудования",
+                    "Проектирование электрических сетей",
+                    "Измерения параметров и устранение повреждений"
+                ],
+                correct: 2
+            },
+            {
+                category: "Правило буравчика",
+                question: "Что определяет правило буравчика (правой руки) для прямого проводника?",
+                answers: [
+                    "Направление тока",
+                    "Направление силовых линий магнитного поля вокруг проводника с током",
+                    "Величину тока",
+                    "Сопротивление проводника"
+                ],
+                correct: 1
+            },
+            {
+                category: "Правило буравчика применение",
+                question: "Как применяется правило буравчика для прямого проводника?",
+                answers: [
+                    "Большой палец показывает направление поля",
+                    "Направление поступательного движения буравчика совпадает с направлением тока, вращение ручки - с направлением магнитного поля",
+                    "Показывает силу тока",
+                    "Определяет сопротивление"
+                ],
+                correct: 1
+            },
+            {
+                category: "Правило буравчика для катушки",
+                question: "Как применяется правило буравчика для кольцевого проводника (катушки)?",
+                answers: [
+                    "Четыре пальца по направлению тока в витках, большой палец - направление магнитного поля внутри катушки",
+                    "Только для прямых проводников",
+                    "Не применяется для катушек",
+                    "Показывает напряжение"
+                ],
+                correct: 0
+            },
+            {
+                category: "Безопасность при пуске",
+                question: "Что произойдет, если двигатель 380В подключить в сеть 220В по схеме звезда?",
+                answers: [
+                    "Сгорит",
+                    "Будет работать нормально, но с меньшей мощностью",
+                    "Не запустится или будет работать с перегрузкой",
+                    "Ничего не произойдет"
+                ],
+                correct: 2
+            },
+            {
+                category: "Техническое обслуживание измерения",
+                question: "Какое минимальное сопротивление изоляции должно быть при измерении мегаомметром?",
+                answers: [
+                    "0,1 МОм",
+                    "0,5 МОм",
+                    "1,0 МОм",
+                    "5,0 МОм"
+                ],
+                correct: 1
+            },
+            {
+                category: "Причины отказа пускателя",
+                question: "Почему магнитный пускатель может не включаться?",
+                answers: [
+                    "Только из-за перегоревшей катушки",
+                    "Обрыв катушки, залипание контактов, механические повреждения, отсутствие напряжения управления",
+                    "Только из-за отсутствия напряжения",
+                    "Такого не бывает"
+                ],
+                correct: 1
+            },
+            {
+                category: "Защита двигателя",
+                question: "От чего защищает тепловое реле в схеме пуска двигателя?",
+                answers: [
+                    "От короткого замыкания",
+                    "От перегрузки двигателя",
+                    "От перенапряжения",
+                    "От утечки тока"
+                ],
+                correct: 1
+            },
+            {
+                category: "Неисправности двигателя",
+                question: "Какие признаки указывают на неисправность подшипников электродвигателя?",
+                answers: [
+                    "Увеличение тока",
+                    "Повышенный шум, вибрация, нагрев",
+                    "Снижение оборотов",
+                    "Изменение цвета корпуса"
+                ],
+                correct: 1
+            },
+            {
+                category: "Причины нагрева двигателя",
+                question: "Что может быть причиной перегрева электродвигателя?",
+                answers: [
+                    "Только высокая температура окружающей среды",
+                    "Перегрузка, плохая вентиляция, межвитковое замыкание, выход из строя подшипников, перекос фаз",
+                    "Только короткое замыкание",
+                    "Только низкое напряжение"
+                ],
+                correct: 1
+            },
+            {
+                category: "Измерительные приборы",
+                question: "Каким прибором измеряют сопротивление изоляции электродвигателя?",
+                answers: [
+                    "Мультиметром",
+                    "Мегаомметром",
+                    "Амперметром",
+                    "Вольтметром"
+                ],
+                correct: 1
+            },
+            {
+                category: "Смазка подшипников",
+                question: "Как часто необходимо проверять и обновлять смазку подшипников электродвигателя?",
+                answers: [
+                    "Каждый день",
+                    "Согласно инструкции производителя (обычно раз в 3-6 месяцев)",
+                    "Раз в год",
+                    "Не требуется"
+                ],
+                correct: 1
+            },
+            {
+                category: "Направление вращения",
+                question: "Как изменить направление вращения трёхфазного асинхронного двигателя?",
+                answers: [
+                    "Изменить напряжение",
+                    "Поменять местами любые две фазы",
+                    "Изменить частоту",
+                    "Невозможно изменить"
+                ],
+                correct: 1
+            },
+            {
+                category: "Пусковой ток",
+                question: "Во сколько раз пусковой ток асинхронного двигателя превышает номинальный?",
+                answers: [
+                    "В 1-2 раза",
+                    "В 5-7 раз",
+                    "В 10-15 раз",
+                    "Не превышает"
+                ],
+                correct: 1
+            }
+        ];
+
+        // Функция для перемешивания массива (алгоритм Фишера-Йетса)
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        let shuffledQuestions = [];
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let answeredQuestions = 0;
+        let incorrectQuestions = []; // Массив для хранения неправильных ответов
+        let selectedQuestionCount = 175; // Количество вопросов для текущей сессии
+
+        function startQuizWithCount(count) {
+            selectedQuestionCount = count;
+            startQuiz();
+        }
+
+        function startQuiz() {
+            // Перемешиваем все вопросы и берем нужное количество
+            const allShuffled = shuffleArray(questions);
+            shuffledQuestions = allShuffled.slice(0, selectedQuestionCount);
+            
+            currentQuestion = 0;
+            correctAnswers = 0;
+            answeredQuestions = 0;
+            incorrectQuestions = []; // Сброс ошибок
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('quizContent').style.display = 'block';
+            loadQuestion();
+        }
+
+        function startRetryQuiz() {
+            // Запуск работы над ошибками
+            selectedQuestionCount = incorrectQuestions.length;
+            shuffledQuestions = shuffleArray(incorrectQuestions);
+            currentQuestion = 0;
+            correctAnswers = 0;
+            answeredQuestions = 0;
+            incorrectQuestions = []; // Сброс для нового прохода
+            
+            document.getElementById('quizContent').innerHTML = `
+                <div class="header">
+                    <button class="finish-early-btn" onclick="finishEarly()" title="Завершить досрочно">✕</button>
+                    <h1>⚡ Работа над ошибками</h1>
+                    <div class="score" id="score">Правильных ответов: 0 из 0</div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="question-info">
+                    <div class="question-number" id="questionNumber"></div>
+                </div>
+
+                <div class="question-text" id="questionText"></div>
+
+                <div class="answers" id="answers"></div>
+
+                <div class="feedback" id="feedback"></div>
+
+                <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Следующий вопрос →</button>
+            `;
+            
+            loadQuestion();
+        }
+
+        function finishEarly() {
+            if (answeredQuestions === 0) {
+                alert('Вы еще не ответили ни на один вопрос!');
+                return;
+            }
+            
+            if (confirm('Вы уверены, что хотите завершить викторину досрочно? Будет показан результат только по отвеченным вопросам.')) {
+                // Обрезаем массив вопросов до текущего
+                shuffledQuestions = shuffledQuestions.slice(0, currentQuestion);
+                showFinalScore();
+            }
+        }
+
+        function loadQuestion() {
+            const question = shuffledQuestions[currentQuestion];
+            
+            // Перемешиваем варианты ответов
+            const answersWithIndices = question.answers.map((answer, index) => ({
+                text: answer,
+                originalIndex: index
+            }));
+            
+            const shuffledAnswers = shuffleArray(answersWithIndices);
+            
+            // Сохраняем перемешанные ответы в объект вопроса
+            question.shuffledAnswers = shuffledAnswers;
+            question.correctAnswerPosition = shuffledAnswers.findIndex(
+                answer => answer.originalIndex === question.correct
+            );
+            
+            document.getElementById('questionNumber').textContent = `Вопрос ${currentQuestion + 1} из ${shuffledQuestions.length} | ${question.category}`;
+            document.getElementById('questionText').textContent = question.question;
+            
+            const answersContainer = document.getElementById('answers');
+            answersContainer.innerHTML = '';
+            
+            shuffledAnswers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = answer.text;
+                button.onclick = () => checkAnswer(index);
+                answersContainer.appendChild(button);
+            });
+
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            
+            updateProgress();
+        }
+
+        function checkAnswer(selected) {
+            const question = shuffledQuestions[currentQuestion];
+            const buttons = document.querySelectorAll('.answer-btn');
+            const feedback = document.getElementById('feedback');
+            
+            buttons.forEach((btn, index) => {
+                btn.classList.add('disabled');
+                if (index === question.correctAnswerPosition) {
+                    btn.classList.add('correct');
+                }
+                if (index === selected && index !== question.correctAnswerPosition) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            answeredQuestions++;
+            
+            if (selected === question.correctAnswerPosition) {
+                correctAnswers++;
+                feedback.className = 'feedback correct';
+                feedback.textContent = '✓ Правильно! Отличная работа!';
+            } else {
+                // Сохраняем вопрос для работы над ошибками
+                incorrectQuestions.push(question);
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `✗ Неправильно. Правильный ответ: ${question.shuffledAnswers[question.correctAnswerPosition].text}`;
+            }
+            
+            feedback.style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+            updateScore();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                showFinalScore();
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = `Правильных ответов: ${correctAnswers} из ${answeredQuestions}`;
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / shuffledQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function showFinalScore() {
+            const percentage = Math.round((correctAnswers / shuffledQuestions.length) * 100);
+            let message = '';
+            
+            if (percentage >= 90) {
+                message = '🏆 Превосходно! Вы отлично знаете электробезопасность!';
+            } else if (percentage >= 70) {
+                message = '👍 Хорошо! Но есть над чем поработать.';
+            } else if (percentage >= 50) {
+                message = '📚 Неплохо, но рекомендуем повторить материал.';
+            } else {
+                message = '💪 Нужно больше практики. Попробуйте еще раз!';
+            }
+            
+            let retryButton = '';
+            if (incorrectQuestions.length > 0) {
+                retryButton = `<button class="restart-btn" onclick="startRetryQuiz()" style="background: linear-gradient(135deg, #f093fb, #f5576c); margin-right: 10px;">📝 Работа над ошибками (${incorrectQuestions.length})</button>`;
+            }
+            
+            document.getElementById('quizContent').innerHTML = `
+                <div class="final-score">
+                    <h2>Викторина завершена!</h2>
+                    <p>Ваш результат: <strong>${correctAnswers} из ${shuffledQuestions.length}</strong> (${percentage}%)</p>
+                    <p>${message}</p>
+                    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                        ${retryButton}
+                        <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
