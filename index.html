@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Викторина по электробезопасности</title>
     <style>
         :root {
@@ -43,7 +43,8 @@
             padding: 20px;
             transition: background 0.3s ease;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Звёздный фон для темной темы */
@@ -127,6 +128,22 @@
             transition: background 0.3s ease;
             position: relative;
             z-index: 10;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                max-height: none;
+                min-height: auto;
+            }
+            
+            body {
+                align-items: flex-start;
+                padding: 10px;
+            }
         }
 
         .theme-toggle {
@@ -474,6 +491,51 @@
 
         .quiz-content {
             display: none;
+        }
+
+        /* Адаптация для мобильных устройств */
+        @media (max-width: 768px) {
+            .theme-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3em;
+                top: 10px;
+                left: 10px;
+            }
+            
+            .finish-early-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1.5em;
+                top: 3px;
+                right: 3px;
+            }
+            
+            .question-text {
+                font-size: 1.1em;
+            }
+            
+            .answer-btn {
+                padding: 15px;
+                font-size: 0.95em;
+            }
+            
+            .question-count-btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+            
+            .start-screen h2 {
+                font-size: 1.5em;
+            }
+            
+            .start-screen p {
+                font-size: 1em;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
         }
     </style>
 </head>
@@ -2697,13 +2759,13 @@
             let message = '';
             
             if (percentage >= 90) {
-                message = '🏆 Превосходно! Даже дракула столько не знает!';
+                message = '🏆 Превосходно! Вы отлично знаете электробезопасность!';
             } else if (percentage >= 70) {
                 message = '👍 Хорошо! Но есть над чем поработать.';
             } else if (percentage >= 50) {
                 message = '📚 Неплохо, но рекомендуем повторить материал.';
             } else {
-                message = '💪 Лошара. Попробуйте еще раз!';
+                message = '💪 Нужно больше практики. Попробуйте еще раз!';
             }
             
             let retryButton = '';
