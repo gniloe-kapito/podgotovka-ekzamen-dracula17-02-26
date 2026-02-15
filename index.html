@@ -2595,6 +2595,7 @@
         let answeredQuestions = 0;
         let incorrectQuestions = []; // Массив для хранения неправильных ответов
         let selectedQuestionCount = 175; // Количество вопросов для текущей сессии
+        let isAnswered = false; // Флаг, показывающий, был ли дан ответ на текущий вопрос
 
         function startQuizWithCount(count) {
             selectedQuestionCount = count;
@@ -2668,6 +2669,9 @@
         function loadQuestion() {
             const question = shuffledQuestions[currentQuestion];
             
+            // Сбрасываем флаг ответа для нового вопроса
+            isAnswered = false;
+            
             // Перемешиваем варианты ответов
             const answersWithIndices = question.answers.map((answer, index) => ({
                 text: answer,
@@ -2703,12 +2707,21 @@
         }
 
         function checkAnswer(selected) {
+            // Проверяем, был ли уже дан ответ на этот вопрос
+            if (isAnswered) {
+                return; // Если да, то игнорируем повторные клики
+            }
+            
+            // Устанавливаем флаг, что ответ уже дан
+            isAnswered = true;
+            
             const question = shuffledQuestions[currentQuestion];
             const buttons = document.querySelectorAll('.answer-btn');
             const feedback = document.getElementById('feedback');
             
             buttons.forEach((btn, index) => {
                 btn.classList.add('disabled');
+                btn.style.pointerEvents = 'none'; // Полностью отключаем клики
                 if (index === question.correctAnswerPosition) {
                     btn.classList.add('correct');
                 }
@@ -2759,7 +2772,7 @@
             let message = '';
             
             if (percentage >= 90) {
-                message = '🏆 Превосходно! Вы отлично знаете электробезопасность!';
+                message = '🏆 ебанутый гений 25 века!';
             } else if (percentage >= 70) {
                 message = '👍 Хорошо! Но есть над чем поработать.';
             } else if (percentage >= 50) {
