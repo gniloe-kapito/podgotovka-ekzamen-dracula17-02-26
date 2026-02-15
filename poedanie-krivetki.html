@@ -2,106 +2,284 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Змейка</title>
     <style>
+        :root {
+            --bg-gradient-start: #0f0c29;
+            --bg-gradient-end: #302b63;
+            --container-bg: #1a1a2e;
+            --text-color: #ffffff;
+            --header-color: #00d4ff;
+            --border-color: #3a3a52;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
+            touch-action: none;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        /* Звёздный фон */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 60px 70px, #fff, transparent),
+                radial-gradient(1px 1px at 50px 50px, #ddd, transparent),
+                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 90px 10px, #eee, transparent);
+            background-size: 300px 300px;
+            animation: twinkle 200s linear infinite;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.3;
+                transform: scale(1.1);
+            }
         }
 
         .container {
             text-align: center;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
+            background: var(--container-bg);
+            padding: 20px;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
+            max-width: 100%;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 10;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         h1 {
-            color: #764ba2;
-            margin-bottom: 20px;
-            font-size: 2.5em;
+            color: var(--header-color);
+            margin-bottom: 15px;
+            font-size: 2em;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: color 0.3s ease;
         }
 
         .score-board {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 20px;
-            font-size: 1.2em;
-            color: #333;
+            margin-bottom: 15px;
+            font-size: 1em;
+            gap: 10px;
         }
 
         .score-item {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--header-color), #764ba2);
             color: white;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border-radius: 10px;
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            flex: 1;
         }
 
         canvas {
-            border: 4px solid #764ba2;
+            border: 4px solid var(--header-color);
             border-radius: 10px;
             background: #1a1a2e;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             image-rendering: pixelated;
+            max-width: 100%;
+            height: auto;
         }
 
         .controls {
-            margin-top: 20px;
-            color: #666;
-            font-size: 0.9em;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .game-over {
+        .control-btn {
+            background: linear-gradient(135deg, var(--header-color), #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.1s;
+            user-select: none;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn:nth-child(1) {
+            grid-column: 2;
+        }
+
+        .control-btn:nth-child(2) {
+            grid-column: 1;
+        }
+
+        .control-btn:nth-child(3) {
+            grid-column: 3;
+        }
+
+        .control-btn:nth-child(4) {
+            grid-column: 2;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+            .score-board {
+                font-size: 1.2em;
+            }
+            .container {
+                padding: 30px;
+            }
+            .theme-toggle {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        .start-screen, .game-over {
             display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.98);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            z-index: 100;
+            padding: 40px 20px;
             text-align: center;
         }
 
-        .game-over h2 {
-            color: #764ba2;
+        .start-screen {
+            display: block;
+        }
+
+        .start-screen h2 {
+            color: var(--header-color);
             font-size: 2em;
             margin-bottom: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .start-screen p {
+            color: var(--text-color);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            transition: color 0.3s ease;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        .game-over h2 {
+            color: var(--header-color);
+            font-size: 2em;
+            margin-bottom: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .game-over p {
+            font-size: 1.3em;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            transition: color 0.3s ease;
         }
 
         .game-over button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
             padding: 15px 40px;
-            font-size: 1.2em;
             border-radius: 10px;
+            font-size: 1.1em;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
             transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .game-over button:hover {
-            transform: scale(1.05);
+        .game-over button:active {
+            transform: scale(0.95);
+        }
+
+        .quiz-content {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .start-screen h2 {
+                font-size: 1.5em;
+            }
+            
+            .start-screen p {
+                font-size: 1em;
+            }
+            
+            .start-btn {
+                padding: 12px 40px;
+                font-size: 1em;
+            }
         }
 
         .particles {
@@ -135,10 +313,15 @@
     </style>
 </head>
 <body>
-    <div class="particles" id="particles"></div>
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+        <h2>🧛 ЗМЕЙКА 🧛</h2>
+        <p>Собирай еду и расти!<br>Не врезайся в стены и себя!</p>
+        <button class="start-btn" onclick="startGame()">НАЧАТЬ ИГРУ</button>
+    </div>
     
-    <div class="container">
-        <h1>🐍 ЗМЕЙКА 🐍</h1>
+    <div class="container quiz-content" id="gameContent">
+        <h1>🧛 ЗМЕЙКА 🧛</h1>
         
         <div class="score-board">
             <div class="score-item">
@@ -149,17 +332,20 @@
             </div>
         </div>
         
-        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
         
+        <!-- Mobile Controls -->
         <div class="controls">
-            <p>Управление: ← ↑ → ↓ или WASD</p>
-            <p>Пробел - Пауза</p>
+            <button class="control-btn" ontouchstart="setDirection(0, -1)">↑</button>
+            <button class="control-btn" ontouchstart="setDirection(-1, 0)">←</button>
+            <button class="control-btn" ontouchstart="setDirection(1, 0)">→</button>
+            <button class="control-btn" ontouchstart="setDirection(0, 1)">↓</button>
         </div>
     </div>
 
     <div class="game-over" id="gameOver">
         <h2>Игра окончена!</h2>
-        <p style="font-size: 1.5em; margin: 20px 0;">Ваш счёт: <span id="finalScore">0</span></p>
+        <p>Ваш счёт: <span id="finalScore">0</span></p>
         <button onclick="restartGame()">Играть снова</button>
     </div>
 
@@ -167,15 +353,24 @@
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const gridSize = 30;
+        const gridSize = 20;
         const tileCount = canvas.width / gridSize;
 
-        // Load images
+        // ============================================
+        // МЕСТО 1: ИЗОБРАЖЕНИЕ ГОЛОВЫ ЗМЕЙКИ
+        // Здесь загружается второе фото для головы змейки
+        // ПУТЬ ДЛЯ GITHUB: './photo_2026-02-15_21-53-18-removebg-preview.png'
+        // ============================================
         const snakeHeadImg = new Image();
-        snakeHeadImg.src = '/mnt/user-data/uploads/photo_2026-02-15_21-53-18-removebg-preview.png';
+        snakeHeadImg.src = './1 (1).png';
         
+        // ============================================
+        // МЕСТО 2: ИЗОБРАЖЕНИЕ ЕДЫ (ВМЕСТО ЯБЛОК)
+        // Здесь загружается первое фото для еды
+        // ПУТЬ ДЛЯ GITHUB: './photo_2026-02-15_21-51-38-removebg-preview.png'
+        // ============================================
         const foodImg = new Image();
-        foodImg.src = '/mnt/user-data/uploads/photo_2026-02-15_21-51-38-removebg-preview.png';
+        foodImg.src = './1 (2).png';
 
         // Game variables
         let snake = [
@@ -187,35 +382,63 @@
         let foodY = 15;
         let score = 0;
         let highScore = localStorage.getItem('snakeHighScore') || 0;
-        let gameRunning = true;
-        let gameSpeed = 100;
+        let gameRunning = false;
+        let gameStarted = false;
+        let gameSpeed = 120;
 
         document.getElementById('highScore').textContent = highScore;
 
-        // Create particles
-        for(let i = 0; i < 20; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.top = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 3 + 's';
-            document.getElementById('particles').appendChild(particle);
+        // Start game function
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameContent').style.display = 'block';
+            gameStarted = true;
+            gameRunning = true;
+            snake = [{x: 10, y: 10}];
+            dx = 1; // Start moving right
+            dy = 0;
+            score = 0;
+            gameSpeed = 120;
+            document.getElementById('score').textContent = score;
+            generateFood();
+            gameLoop();
         }
 
-        // Keyboard controls
+        // Mobile control function
+        function setDirection(newDx, newDy) {
+            const goingUp = dy === -1;
+            const goingDown = dy === 1;
+            const goingRight = dx === 1;
+            const goingLeft = dx === -1;
+
+            if(newDx === -1 && !goingRight) {
+                dx = -1;
+                dy = 0;
+            }
+            else if(newDy === -1 && !goingDown) {
+                dx = 0;
+                dy = -1;
+            }
+            else if(newDx === 1 && !goingLeft) {
+                dx = 1;
+                dy = 0;
+            }
+            else if(newDy === 1 && !goingUp) {
+                dx = 0;
+                dy = 1;
+            }
+        }
+
+        // Keyboard controls (for desktop)
         document.addEventListener('keydown', changeDirection);
 
         function changeDirection(event) {
+            if(!gameStarted) return;
+            
             const LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
-            const A = 65, W = 87, D = 68, S = 83, SPACE = 32;
+            const A = 65, W = 87, D = 68, S = 83;
             
             const key = event.keyCode;
-            
-            if(key === SPACE) {
-                gameRunning = !gameRunning;
-                if(gameRunning) gameLoop();
-                return;
-            }
 
             const goingUp = dy === -1;
             const goingDown = dy === 1;
@@ -328,6 +551,10 @@
                 ctx.fill();
             }
 
+            // ============================================
+            // МЕСТО 3: ОТРИСОВКА ГОЛОВЫ ЗМЕЙКИ
+            // Здесь рисуется голова змейки используя второе фото
+            // ============================================
             // Draw snake head (image)
             if(snakeHeadImg.complete) {
                 ctx.save();
@@ -342,6 +569,10 @@
                 ctx.restore();
             }
 
+            // ============================================
+            // МЕСТО 4: ОТРИСОВКА ЕДЫ
+            // Здесь рисуется еда используя первое фото
+            // ============================================
             // Draw food (image)
             if(foodImg.complete) {
                 // Add pulsing effect
@@ -373,19 +604,22 @@
         function gameOver() {
             gameRunning = false;
             document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameContent').style.display = 'none';
             document.getElementById('gameOver').style.display = 'block';
         }
 
         function restartGame() {
             document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('gameContent').style.display = 'block';
             snake = [{x: 10, y: 10}];
-            dx = 0;
+            dx = 1; // Start moving right
             dy = 0;
             score = 0;
-            gameSpeed = 100;
+            gameSpeed = 120;
             document.getElementById('score').textContent = score;
             generateFood();
             gameRunning = true;
+            gameStarted = true;
             gameLoop();
         }
 
@@ -401,14 +635,15 @@
         function imageLoaded() {
             imagesLoaded++;
             if(imagesLoaded === 2) {
-                gameLoop();
+                // Just draw the initial canvas, don't start game
+                drawGame();
             }
         }
 
         snakeHeadImg.onload = imageLoaded;
         foodImg.onload = imageLoaded;
 
-        // Start with at least canvas drawn
+        // Draw initial canvas
         drawGame();
     </script>
 </body>
