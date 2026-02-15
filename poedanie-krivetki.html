@@ -336,10 +336,10 @@
         
         <!-- Mobile Controls -->
         <div class="controls">
-            <button class="control-btn" onclick="setDirection(0, -1)" ontouchstart="event.preventDefault(); setDirection(0, -1)">↑</button>
-            <button class="control-btn" onclick="setDirection(-1, 0)" ontouchstart="event.preventDefault(); setDirection(-1, 0)">←</button>
-            <button class="control-btn" onclick="setDirection(1, 0)" ontouchstart="event.preventDefault(); setDirection(1, 0)">→</button>
-            <button class="control-btn" onclick="setDirection(0, 1)" ontouchstart="event.preventDefault(); setDirection(0, 1)">↓</button>
+            <button class="control-btn" id="btnUp">↑</button>
+            <button class="control-btn" id="btnLeft">←</button>
+            <button class="control-btn" id="btnRight">→</button>
+            <button class="control-btn" id="btnDown">↓</button>
         </div>
     </div>
 
@@ -359,18 +359,18 @@
         // ============================================
         // МЕСТО 1: ИЗОБРАЖЕНИЕ ГОЛОВЫ ЗМЕЙКИ
         // Здесь загружается второе фото для головы змейки
-        // ПУТЬ ДЛЯ GITHUB: './1 (2).png'
+        // ПУТЬ ДЛЯ GITHUB: './1 (1).png'
         // ============================================
         const snakeHeadImg = new Image();
-        snakeHeadImg.src = './1 (2).png';
+        snakeHeadImg.src = './1 (1).png';
         
         // ============================================
         // МЕСТО 2: ИЗОБРАЖЕНИЕ ЕДЫ (ВМЕСТО ЯБЛОК)
         // Здесь загружается первое фото для еды
-        // ПУТЬ ДЛЯ GITHUB: './1 (1).png'
+        // ПУТЬ ДЛЯ GITHUB: './1 (2).png'
         // ============================================
         const foodImg = new Image();
-        foodImg.src = './1 (1).png';
+        foodImg.src = './1 (2).png';
 
         // Game variables
         let snake = [
@@ -385,6 +385,11 @@
         let gameRunning = false;
         let gameStarted = false;
         let gameSpeed = 200; // Понижена скорость (было 120, теперь 200мс)
+        
+        // Переменные для плавной анимации
+        let animationProgress = 0;
+        let lastUpdateTime = 0;
+        let previousSnake = [];
 
         document.getElementById('highScore').textContent = highScore;
 
@@ -432,6 +437,58 @@
             else if(dx === 0 && dy === 0) {
                 dx = newDx;
                 dy = newDy;
+            }
+        }
+
+        // Добавляем обработчики событий для кнопок управления
+        function setupControls() {
+            const btnUp = document.getElementById('btnUp');
+            const btnDown = document.getElementById('btnDown');
+            const btnLeft = document.getElementById('btnLeft');
+            const btnRight = document.getElementById('btnRight');
+
+            if(btnUp) {
+                btnUp.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    setDirection(0, -1);
+                });
+                btnUp.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setDirection(0, -1);
+                });
+            }
+
+            if(btnDown) {
+                btnDown.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    setDirection(0, 1);
+                });
+                btnDown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setDirection(0, 1);
+                });
+            }
+
+            if(btnLeft) {
+                btnLeft.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    setDirection(-1, 0);
+                });
+                btnLeft.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setDirection(-1, 0);
+                });
+            }
+
+            if(btnRight) {
+                btnRight.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    setDirection(1, 0);
+                });
+                btnRight.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setDirection(1, 0);
+                });
             }
         }
 
@@ -489,49 +546,10 @@
                 ctx.stroke();
             }
 
-            // Move snake
-            if(dx !== 0 || dy !== 0) {
-                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-                snake.unshift(head);
-
-                // Check food collision
-                if(head.x === foodX && head.y === foodY) {
-                    score++;
-                    document.getElementById('score').textContent = score;
-                    
-                    if(score > highScore) {
-                        highScore = score;
-                        localStorage.setItem('snakeHighScore', highScore);
-                        document.getElementById('highScore').textContent = highScore;
-                    }
-                    
-                    generateFood();
-                    
-                    // Increase speed (but slower progression)
-                    if(score % 5 === 0) {
-                        gameSpeed = Math.max(100, gameSpeed - 10);
-                    }
-                } else {
-                    snake.pop();
-                }
-            }
-
-            // Check collision with walls
-            if(snake[0].x < 0 || snake[0].x >= tileCount || 
-               snake[0].y < 0 || snake[0].y >= tileCount) {
-                gameOver();
-                return;
-            }
-
-            // Check collision with self
-            for(let i = 1; i < snake.length; i++) {
-                if(snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
-                    gameOver();
-                    return;
-                }
-            }
-
-            // Draw snake body with gradient
+            // Рисуем змейку с плавной анимацией
+            const smoothProgress = Math.min(animationProgress / gameSpeed, 1);
+            
+            // Draw snake body with gradient and smooth animation
             for(let i = snake.length - 1; i > 0; i--) {
                 const alpha = 1 - (i / snake.length * 0.5);
                 const gradient = ctx.createRadialGradient(
@@ -546,10 +564,20 @@
                 gradient.addColorStop(1, `rgba(118, 75, 162, ${alpha})`);
                 
                 ctx.fillStyle = gradient;
+                
+                // Плавная интерполяция позиции
+                let drawX = snake[i].x;
+                let drawY = snake[i].y;
+                
+                if(previousSnake[i]) {
+                    drawX = previousSnake[i].x + (snake[i].x - previousSnake[i].x) * smoothProgress;
+                    drawY = previousSnake[i].y + (snake[i].y - previousSnake[i].y) * smoothProgress;
+                }
+                
                 ctx.beginPath();
                 ctx.arc(
-                    snake[i].x * gridSize + gridSize/2,
-                    snake[i].y * gridSize + gridSize/2,
+                    drawX * gridSize + gridSize/2,
+                    drawY * gridSize + gridSize/2,
                     gridSize/2 - 2,
                     0,
                     2 * Math.PI
@@ -557,14 +585,18 @@
                 ctx.fill();
             }
 
-            // ============================================
-            // МЕСТО 3: ОТРИСОВКА ГОЛОВЫ ЗМЕЙКИ
-            // Здесь рисуется голова змейки используя второе фото
-            // ============================================
-            // Draw snake head (image)
+            // Draw snake head (image) with smooth animation
             if(snakeHeadImg.complete) {
+                let headX = snake[0].x;
+                let headY = snake[0].y;
+                
+                if(previousSnake[0]) {
+                    headX = previousSnake[0].x + (snake[0].x - previousSnake[0].x) * smoothProgress;
+                    headY = previousSnake[0].y + (snake[0].y - previousSnake[0].y) * smoothProgress;
+                }
+                
                 ctx.save();
-                ctx.translate(snake[0].x * gridSize + gridSize/2, snake[0].y * gridSize + gridSize/2);
+                ctx.translate(headX * gridSize + gridSize/2, headY * gridSize + gridSize/2);
                 
                 // Rotate based on direction
                 if(dx === 1) ctx.rotate(Math.PI / 2);
@@ -629,11 +661,79 @@
             gameLoop();
         }
 
-        function gameLoop() {
+        function updateGame() {
+            // Move snake
+            if(dx !== 0 || dy !== 0) {
+                previousSnake = snake.map(segment => ({...segment}));
+                
+                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                snake.unshift(head);
+
+                // Check food collision
+                if(head.x === foodX && head.y === foodY) {
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    
+                    if(score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('snakeHighScore', highScore);
+                        document.getElementById('highScore').textContent = highScore;
+                    }
+                    
+                    generateFood();
+                    
+                    // Increase speed (but slower progression)
+                    if(score % 5 === 0) {
+                        gameSpeed = Math.max(100, gameSpeed - 10);
+                    }
+                } else {
+                    snake.pop();
+                }
+            }
+
+            // Check collision with walls
+            if(snake[0].x < 0 || snake[0].x >= tileCount || 
+               snake[0].y < 0 || snake[0].y >= tileCount) {
+                gameOver();
+                return;
+            }
+
+            // Check collision with self
+            for(let i = 1; i < snake.length; i++) {
+                if(snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
+                    gameOver();
+                    return;
+                }
+            }
+            
+            animationProgress = 0;
+        }
+
+        function animate(currentTime) {
             if(!gameRunning) return;
             
+            if(!lastUpdateTime) lastUpdateTime = currentTime;
+            
+            const deltaTime = currentTime - lastUpdateTime;
+            animationProgress += deltaTime;
+            
+            // Обновляем игровую логику когда прошло достаточно времени
+            if(animationProgress >= gameSpeed) {
+                lastUpdateTime = currentTime;
+                updateGame();
+            }
+            
+            // Рисуем каждый кадр для плавности
             drawGame();
-            setTimeout(gameLoop, gameSpeed);
+            
+            requestAnimationFrame(animate);
+        }
+
+        function gameLoop() {
+            if(!gameRunning) return;
+            lastUpdateTime = 0;
+            animationProgress = 0;
+            requestAnimationFrame(animate);
         }
 
         // Wait for images to load
@@ -651,6 +751,9 @@
 
         // Draw initial canvas
         drawGame();
+        
+        // Инициализируем управление когда страница загружена
+        setupControls();
     </script>
 </body>
 </html>
