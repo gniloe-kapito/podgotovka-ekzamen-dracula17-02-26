@@ -169,25 +169,6 @@
             grid-column: 2;
         }
 
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 2.5em;
-            }
-            .score-board {
-                font-size: 1.2em;
-            }
-            .container {
-                padding: 30px;
-            }
-            .theme-toggle {
-                width: 50px;
-                height: 50px;
-                font-size: 1.5em;
-                top: 20px;
-                right: 20px;
-            }
-        }
-
         .start-screen, .game-over {
             display: none;
             padding: 40px 20px;
@@ -267,47 +248,15 @@
             display: none;
         }
 
-        @media (max-width: 768px) {
-            .start-screen h2 {
-                font-size: 1.5em;
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.5em;
             }
-            
-            .start-screen p {
-                font-size: 1em;
+            .score-board {
+                font-size: 1.2em;
             }
-            
-            .start-btn {
-                padding: 12px 40px;
-                font-size: 1em;
-            }
-        }
-
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.6;
-            animation: float 3s infinite;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-20px);
+            .container {
+                padding: 30px;
             }
         }
     </style>
@@ -350,292 +299,254 @@
     </div>
 
     <script>
-        // Canvas setup
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const gridSize = 30; // Увеличен размер клетки для больших объектов
-        const tileCount = canvas.width / gridSize; // Теперь 10x10 клеток (как в Google Snake)
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+        
+        var grid = 30;
+        var count = 0;
+        
+        var snake = {
+            x: 150,
+            y: 150,
+            dx: grid,
+            dy: 0,
+            cells: [],
+            maxCells: 4
+        };
+        
+        var apple = {
+            x: 90,
+            y: 90
+        };
 
-        // ============================================
-        // МЕСТО 1: ИЗОБРАЖЕНИЕ ГОЛОВЫ ЗМЕЙКИ
-        // Здесь загружается второе фото для головы змейки
-        // ПУТЬ ДЛЯ GITHUB: './1 (1).png'
-        // ============================================
         const snakeHeadImg = new Image();
         snakeHeadImg.src = './1 (1).png';
         
-        // ============================================
-        // МЕСТО 2: ИЗОБРАЖЕНИЕ ЕДЫ (ВМЕСТО ЯБЛОК)
-        // Здесь загружается первое фото для еды
-        // ПУТЬ ДЛЯ GITHUB: './1 (2).png'
-        // ============================================
         const foodImg = new Image();
         foodImg.src = './1 (2).png';
 
-        // Game variables
-        let snake = [
-            {x: 5, y: 5}
-        ];
-        let dx = 0;
-        let dy = 0;
-        let foodX = 7;
-        let foodY = 7;
         let score = 0;
         let highScore = localStorage.getItem('snakeHighScore') || 0;
         let gameRunning = false;
         let gameStarted = false;
-        let gameSpeed = 200; // Понижена скорость (было 120, теперь 200мс)
-        
-        // Переменные для плавной анимации
-        let animationProgress = 0;
-        let lastUpdateTime = 0;
-        let previousSnake = [];
 
         document.getElementById('highScore').textContent = highScore;
 
-        // Start game function
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameContent').style.display = 'block';
             gameStarted = true;
             gameRunning = true;
-            snake = [{x: 5, y: 5}];
-            dx = 1; // Start moving right
-            dy = 0;
+            
+            snake.x = 150;
+            snake.y = 150;
+            snake.dx = grid;
+            snake.dy = 0;
+            snake.cells = [];
+            snake.maxCells = 4;
+            
             score = 0;
-            gameSpeed = 200;
             document.getElementById('score').textContent = score;
-            generateFood();
-            gameLoop();
+            
+            apple.x = getRandomInt(0, 10) * grid;
+            apple.y = getRandomInt(0, 10) * grid;
+            
+            requestAnimationFrame(loop);
         }
 
-        // Mobile control function - ИСПРАВЛЕНО
-        function setDirection(newDx, newDy) {
-            // Предотвращаем движение в противоположную сторону
-            const goingUp = dy === -1;
-            const goingDown = dy === 1;
-            const goingRight = dx === 1;
-            const goingLeft = dx === -1;
+        function loop() {
+            if(!gameRunning) return;
+            
+            requestAnimationFrame(loop);
 
-            if(newDx === -1 && !goingRight && dx !== 0) {
-                dx = -1;
-                dy = 0;
+            // slow game loop - замедляем змейку (было 6, теперь 12 = медленнее в 2 раза)
+            if (++count < 12) {
+                return;
             }
-            else if(newDy === -1 && !goingDown && dy !== 0) {
-                dx = 0;
-                dy = -1;
+
+            count = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            snake.x += snake.dx;
+            snake.y += snake.dy;
+
+            if (snake.x < 0 || snake.x >= canvas.width || 
+                snake.y < 0 || snake.y >= canvas.height) {
+                gameOver();
+                return;
             }
-            else if(newDx === 1 && !goingLeft && dx !== 0) {
-                dx = 1;
-                dy = 0;
+
+            snake.cells.unshift({x: snake.x, y: snake.y});
+
+            if (snake.cells.length > snake.maxCells) {
+                snake.cells.pop();
             }
-            else if(newDy === 1 && !goingUp && dy !== 0) {
-                dx = 0;
-                dy = 1;
+
+            if(foodImg.complete) {
+                const pulse = Math.sin(Date.now() / 200) * 0.1 + 1;
+                const size = grid * pulse;
+                ctx.drawImage(
+                    foodImg,
+                    apple.x + (grid - size)/2,
+                    apple.y + (grid - size)/2,
+                    size,
+                    size
+                );
             }
-            // Если змейка еще не двигается, разрешаем любое направление
-            else if(dx === 0 && dy === 0) {
-                dx = newDx;
-                dy = newDy;
-            }
+
+            snake.cells.forEach(function(cell, index) {
+                
+                if(index === 0 && snakeHeadImg.complete) {
+                    ctx.save();
+                    ctx.translate(cell.x + grid/2, cell.y + grid/2);
+                    
+                    if(snake.dx === grid) ctx.rotate(Math.PI / 2);
+                    else if(snake.dx === -grid) ctx.rotate(-Math.PI / 2);
+                    else if(snake.dy === grid) ctx.rotate(Math.PI);
+                    
+                    ctx.drawImage(snakeHeadImg, -grid/2, -grid/2, grid, grid);
+                    ctx.restore();
+                } else {
+                    const alpha = 1 - (index / snake.cells.length * 0.5);
+                    const gradient = ctx.createRadialGradient(
+                        cell.x + grid/2,
+                        cell.y + grid/2,
+                        0,
+                        cell.x + grid/2,
+                        cell.y + grid/2,
+                        grid/2
+                    );
+                    gradient.addColorStop(0, `rgba(102, 126, 234, ${alpha})`);
+                    gradient.addColorStop(1, `rgba(118, 75, 162, ${alpha})`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(
+                        cell.x + grid/2,
+                        cell.y + grid/2,
+                        grid/2 - 2,
+                        0,
+                        2 * Math.PI
+                    );
+                    ctx.fill();
+                }
+
+                if (cell.x === apple.x && cell.y === apple.y) {
+                    snake.maxCells++;
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    
+                    if(score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('snakeHighScore', highScore);
+                        document.getElementById('highScore').textContent = highScore;
+                    }
+
+                    apple.x = getRandomInt(0, 10) * grid;
+                    apple.y = getRandomInt(0, 10) * grid;
+                }
+
+                for (var i = index + 1; i < snake.cells.length; i++) {
+                    if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+                        gameOver();
+                        return;
+                    }
+                }
+            });
         }
 
-        // Добавляем обработчики событий для кнопок управления
+        document.addEventListener('keydown', function(e) {
+            if(!gameStarted) return;
+
+            if (e.which === 37 && snake.dx === 0) {
+                snake.dx = -grid;
+                snake.dy = 0;
+            }
+            else if (e.which === 38 && snake.dy === 0) {
+                snake.dy = -grid;
+                snake.dx = 0;
+            }
+            else if (e.which === 39 && snake.dx === 0) {
+                snake.dx = grid;
+                snake.dy = 0;
+            }
+            else if (e.which === 40 && snake.dy === 0) {
+                snake.dy = grid;
+                snake.dx = 0;
+            }
+        });
+
         function setupControls() {
             const btnUp = document.getElementById('btnUp');
             const btnDown = document.getElementById('btnDown');
             const btnLeft = document.getElementById('btnLeft');
             const btnRight = document.getElementById('btnRight');
 
+            function handleUp(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if(snake.dy === 0) {
+                    snake.dy = -grid;
+                    snake.dx = 0;
+                }
+            }
+
+            function handleDown(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if(snake.dy === 0) {
+                    snake.dy = grid;
+                    snake.dx = 0;
+                }
+            }
+
+            function handleLeft(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if(snake.dx === 0) {
+                    snake.dx = -grid;
+                    snake.dy = 0;
+                }
+            }
+
+            function handleRight(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if(snake.dx === 0) {
+                    snake.dx = grid;
+                    snake.dy = 0;
+                }
+            }
+
             if(btnUp) {
-                btnUp.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    setDirection(0, -1);
-                });
-                btnUp.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setDirection(0, -1);
-                });
+                btnUp.addEventListener('touchstart', handleUp, {passive: false});
+                btnUp.addEventListener('mousedown', handleUp);
+                btnUp.addEventListener('click', handleUp);
             }
 
             if(btnDown) {
-                btnDown.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    setDirection(0, 1);
-                });
-                btnDown.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setDirection(0, 1);
-                });
+                btnDown.addEventListener('touchstart', handleDown, {passive: false});
+                btnDown.addEventListener('mousedown', handleDown);
+                btnDown.addEventListener('click', handleDown);
             }
 
             if(btnLeft) {
-                btnLeft.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    setDirection(-1, 0);
-                });
-                btnLeft.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setDirection(-1, 0);
-                });
+                btnLeft.addEventListener('touchstart', handleLeft, {passive: false});
+                btnLeft.addEventListener('mousedown', handleLeft);
+                btnLeft.addEventListener('click', handleLeft);
             }
 
             if(btnRight) {
-                btnRight.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    setDirection(1, 0);
-                });
-                btnRight.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setDirection(1, 0);
-                });
-            }
-        }
-
-        // Keyboard controls (for desktop)
-        document.addEventListener('keydown', changeDirection);
-
-        function changeDirection(event) {
-            if(!gameStarted) return;
-            
-            const LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
-            const A = 65, W = 87, D = 68, S = 83;
-            
-            const key = event.keyCode;
-
-            const goingUp = dy === -1;
-            const goingDown = dy === 1;
-            const goingRight = dx === 1;
-            const goingLeft = dx === -1;
-
-            if((key === LEFT || key === A) && !goingRight) {
-                dx = -1;
-                dy = 0;
-            }
-            if((key === UP || key === W) && !goingDown) {
-                dx = 0;
-                dy = -1;
-            }
-            if((key === RIGHT || key === D) && !goingLeft) {
-                dx = 1;
-                dy = 0;
-            }
-            if((key === DOWN || key === S) && !goingUp) {
-                dx = 0;
-                dy = 1;
-            }
-        }
-
-        function drawGame() {
-            // Clear canvas
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw grid
-            ctx.strokeStyle = '#16213e33';
-            ctx.lineWidth = 1;
-            for(let i = 0; i < tileCount; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * gridSize, 0);
-                ctx.lineTo(i * gridSize, canvas.height);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(0, i * gridSize);
-                ctx.lineTo(canvas.width, i * gridSize);
-                ctx.stroke();
-            }
-
-            // Рисуем змейку с плавной анимацией
-            const smoothProgress = Math.min(animationProgress / gameSpeed, 1);
-            
-            // Draw snake body with gradient and smooth animation
-            for(let i = snake.length - 1; i > 0; i--) {
-                const alpha = 1 - (i / snake.length * 0.5);
-                const gradient = ctx.createRadialGradient(
-                    snake[i].x * gridSize + gridSize/2,
-                    snake[i].y * gridSize + gridSize/2,
-                    0,
-                    snake[i].x * gridSize + gridSize/2,
-                    snake[i].y * gridSize + gridSize/2,
-                    gridSize/2
-                );
-                gradient.addColorStop(0, `rgba(102, 126, 234, ${alpha})`);
-                gradient.addColorStop(1, `rgba(118, 75, 162, ${alpha})`);
-                
-                ctx.fillStyle = gradient;
-                
-                // Плавная интерполяция позиции
-                let drawX = snake[i].x;
-                let drawY = snake[i].y;
-                
-                if(previousSnake[i]) {
-                    drawX = previousSnake[i].x + (snake[i].x - previousSnake[i].x) * smoothProgress;
-                    drawY = previousSnake[i].y + (snake[i].y - previousSnake[i].y) * smoothProgress;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(
-                    drawX * gridSize + gridSize/2,
-                    drawY * gridSize + gridSize/2,
-                    gridSize/2 - 2,
-                    0,
-                    2 * Math.PI
-                );
-                ctx.fill();
-            }
-
-            // Draw snake head (image) with smooth animation
-            if(snakeHeadImg.complete) {
-                let headX = snake[0].x;
-                let headY = snake[0].y;
-                
-                if(previousSnake[0]) {
-                    headX = previousSnake[0].x + (snake[0].x - previousSnake[0].x) * smoothProgress;
-                    headY = previousSnake[0].y + (snake[0].y - previousSnake[0].y) * smoothProgress;
-                }
-                
-                ctx.save();
-                ctx.translate(headX * gridSize + gridSize/2, headY * gridSize + gridSize/2);
-                
-                // Rotate based on direction
-                if(dx === 1) ctx.rotate(Math.PI / 2);
-                else if(dx === -1) ctx.rotate(-Math.PI / 2);
-                else if(dy === 1) ctx.rotate(Math.PI);
-                
-                ctx.drawImage(snakeHeadImg, -gridSize/2, -gridSize/2, gridSize, gridSize);
-                ctx.restore();
-            }
-
-            // ============================================
-            // МЕСТО 4: ОТРИСОВКА ЕДЫ
-            // Здесь рисуется еда используя первое фото
-            // ============================================
-            // Draw food (image)
-            if(foodImg.complete) {
-                // Add pulsing effect
-                const pulse = Math.sin(Date.now() / 200) * 0.1 + 1;
-                const size = gridSize * pulse;
-                ctx.drawImage(
-                    foodImg,
-                    foodX * gridSize + (gridSize - size)/2,
-                    foodY * gridSize + (gridSize - size)/2,
-                    size,
-                    size
-                );
-            }
-        }
-
-        function generateFood() {
-            foodX = Math.floor(Math.random() * tileCount);
-            foodY = Math.floor(Math.random() * tileCount);
-            
-            // Make sure food doesn't spawn on snake
-            for(let segment of snake) {
-                if(segment.x === foodX && segment.y === foodY) {
-                    generateFood();
-                    return;
-                }
+                btnRight.addEventListener('touchstart', handleRight, {passive: false});
+                btnRight.addEventListener('mousedown', handleRight);
+                btnRight.addEventListener('click', handleRight);
             }
         }
 
@@ -648,111 +559,9 @@
 
         function restartGame() {
             document.getElementById('gameOver').style.display = 'none';
-            document.getElementById('gameContent').style.display = 'block';
-            snake = [{x: 5, y: 5}];
-            dx = 1; // Start moving right
-            dy = 0;
-            score = 0;
-            gameSpeed = 200;
-            document.getElementById('score').textContent = score;
-            generateFood();
-            gameRunning = true;
-            gameStarted = true;
-            gameLoop();
+            startGame();
         }
 
-        function updateGame() {
-            // Move snake
-            if(dx !== 0 || dy !== 0) {
-                previousSnake = snake.map(segment => ({...segment}));
-                
-                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-                snake.unshift(head);
-
-                // Check food collision
-                if(head.x === foodX && head.y === foodY) {
-                    score++;
-                    document.getElementById('score').textContent = score;
-                    
-                    if(score > highScore) {
-                        highScore = score;
-                        localStorage.setItem('snakeHighScore', highScore);
-                        document.getElementById('highScore').textContent = highScore;
-                    }
-                    
-                    generateFood();
-                    
-                    // Increase speed (but slower progression)
-                    if(score % 5 === 0) {
-                        gameSpeed = Math.max(100, gameSpeed - 10);
-                    }
-                } else {
-                    snake.pop();
-                }
-            }
-
-            // Check collision with walls
-            if(snake[0].x < 0 || snake[0].x >= tileCount || 
-               snake[0].y < 0 || snake[0].y >= tileCount) {
-                gameOver();
-                return;
-            }
-
-            // Check collision with self
-            for(let i = 1; i < snake.length; i++) {
-                if(snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
-                    gameOver();
-                    return;
-                }
-            }
-            
-            animationProgress = 0;
-        }
-
-        function animate(currentTime) {
-            if(!gameRunning) return;
-            
-            if(!lastUpdateTime) lastUpdateTime = currentTime;
-            
-            const deltaTime = currentTime - lastUpdateTime;
-            animationProgress += deltaTime;
-            
-            // Обновляем игровую логику когда прошло достаточно времени
-            if(animationProgress >= gameSpeed) {
-                lastUpdateTime = currentTime;
-                updateGame();
-            }
-            
-            // Рисуем каждый кадр для плавности
-            drawGame();
-            
-            requestAnimationFrame(animate);
-        }
-
-        function gameLoop() {
-            if(!gameRunning) return;
-            lastUpdateTime = 0;
-            animationProgress = 0;
-            requestAnimationFrame(animate);
-        }
-
-        // Wait for images to load
-        let imagesLoaded = 0;
-        function imageLoaded() {
-            imagesLoaded++;
-            if(imagesLoaded === 2) {
-                // Just draw the initial canvas, don't start game
-                drawGame();
-            }
-        }
-
-        snakeHeadImg.onload = imageLoaded;
-        foodImg.onload = imageLoaded;
-
-        // Draw initial canvas
-        drawGame();
-        
-        // Инициализируем управление когда страница загружена
         setupControls();
     </script>
 </body>
