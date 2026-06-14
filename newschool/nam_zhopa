@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Викторина по спец.теху</title>
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: white;
+            --text-color: #333;
+            --header-color: #667eea;
+            --border-color: #e0e0e0;
+            --question-bg: #f8f9fa;
+            --answer-hover-bg: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #0f0c29;
+            --bg-gradient-end: #302b63;
+            --container-bg: #1a1a2e;
+            --text-color: #ffffff;
+            --header-color: #00d4ff;
+            --border-color: #3a3a52;
+            --question-bg: #16213e;
+            --answer-hover-bg: #1e2a47;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s ease;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        [data-theme="dark"] body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 60px 70px, #fff, transparent),
+                radial-gradient(1px 1px at 50px 50px, #ddd, transparent),
+                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 90px 10px, #eee, transparent),
+                radial-gradient(1px 1px at 200px 150px, #fff, transparent),
+                radial-gradient(2px 2px at 250px 60px, #eee, transparent);
+            background-size: 300px 300px;
+            animation: twinkle 200s linear infinite;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.25; transform: scale(1.1); }
+        }
+
+        .container {
+            background: var(--container-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease-out;
+            transition: background 0.3s ease;
+            position: relative;
+            z-index: 10;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; max-height: none; }
+            body { align-items: flex-start; padding: 10px; }
+        }
+
+        /* ── Theme Toggle ── */
+        .theme-toggle {
+            position: absolute;
+            top: 20px; left: 20px;
+            background: var(--container-bg);
+            border: 2px solid var(--border-color);
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .theme-toggle:hover { transform: rotate(180deg) scale(1.1); }
+
+        /* ── Loading screen ── */
+        .loading-screen {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .loading-screen p {
+            color: var(--text-color);
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid var(--border-color);
+            border-top-color: var(--header-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Error screen ── */
+        .error-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .error-screen h2 { color: #dc3545; margin-bottom: 15px; }
+        .error-screen p  { color: var(--text-color); margin-bottom: 20px; line-height: 1.6; }
+        .error-screen code {
+            background: var(--question-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        /* ── Start screen ── */
+        .start-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .start-screen h2 {
+            color: var(--header-color);
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .start-screen p {
+            color: var(--text-color);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .start-screen .question-count-label {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--header-color);
+        }
+        .count-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .question-count-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .question-count-btn:hover { transform: scale(1.05); }
+        .question-count-btn.all {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        /* ── Quiz content ── */
+        .quiz-content { display: none; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .header h1 { color: var(--header-color); font-size: 2em; margin-bottom: 10px; }
+
+        .finish-early-btn {
+            position: absolute;
+            top: 5px; right: 5px;
+            background: none; border: none;
+            font-size: 1.8em; cursor: pointer;
+            color: var(--text-color);
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .finish-early-btn:hover { background: rgba(0,0,0,0.1); transform: rotate(90deg); }
+
+        .score {
+            text-align: center;
+            font-size: 1.3em;
+            color: var(--header-color);
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%; height: 8px;
+            background: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--header-color), #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .question-info {
+            background: var(--question-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--header-color);
+        }
+        .question-number {
+            font-weight: bold;
+            color: var(--header-color);
+            font-size: 1.1em;
+        }
+
+        .question-text {
+            color: var(--text-color);
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .answer-btn {
+            background: var(--container-bg);
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 1em;
+            color: var(--text-color);
+        }
+        .answer-btn:hover {
+            border-color: var(--header-color);
+            background: var(--answer-hover-bg);
+            transform: translateX(5px);
+        }
+        .answer-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: pulse 0.5s;
+            color: #155724;
+        }
+        .answer-btn.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            animation: shake 0.5s;
+            color: #721c24;
+        }
+        [data-theme="dark"] .answer-btn.correct  { color: #000; background: #d4edda; }
+        [data-theme="dark"] .answer-btn.incorrect { color: #000; background: #f8d7da; }
+        .answer-btn.disabled { cursor: not-allowed; opacity: 0.6; }
+
+        @keyframes pulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.02)} }
+        @keyframes shake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)} }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        .feedback.correct  { background:#d4edda; border:1px solid #28a745; color:#155724; }
+        .feedback.incorrect{ background:#f8d7da; border:1px solid #dc3545; color:#721c24; }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: none;
+            margin: 20px auto;
+            transition: transform 0.3s ease;
+        }
+        .next-btn:hover { transform: scale(1.05); }
+
+        /* ── Final score ── */
+        .final-score {
+            text-align: center;
+            padding: 40px;
+        }
+        .final-score h2 { color: var(--header-color); font-size: 2.5em; margin-bottom: 20px; }
+        .final-score p  { font-size: 1.3em; color: var(--text-color); margin-bottom: 30px; }
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .restart-btn:hover { transform: scale(1.05); }
+
+        /* ── Author ── */
+        .author {
+            text-align: center;
+            font-size: 0.85em;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            color: #000;
+        }
+        [data-theme="dark"] .author { color: rgba(255,255,255,0.9); }
+        .author a { color: inherit; text-decoration: none; font-weight: 500; }
+        .author a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .theme-toggle { width: 45px; height: 45px; font-size: 1.3em; top: 10px; left: 10px; }
+            .question-text { font-size: 1.1em; }
+            .answer-btn { padding: 15px; font-size: 0.95em; }
+            .header h1 { font-size: 1.5em; }
+            .start-screen h2 { font-size: 1.5em; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+        <span id="theme-icon">🌙</span>
+    </button>
+
+    <!-- Loading -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Загружаю вопросы…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-screen" id="errorScreen" style="display:none;">
+        <h2>⚠️ Не удалось загрузить вопросы</h2>
+        <p>
+            Убедитесь, что рядом с <code>index.html</code> лежит файл <code>questions.json</code>.<br>
+            На GitHub Pages — оба файла в одном репозитории.<br>
+            При открытии через <code>file://</code> локально браузер может блокировать запрос — откройте через
+            локальный сервер или просто задеплойте на GitHub Pages.
+        </p>
+        <button class="restart-btn" onclick="location.reload()">↺ Попробовать снова</button>
+    </div>
+
+    <!-- Start screen -->
+    <div class="start-screen" id="startScreen" style="display:none;">
+        <h2>🔌 Викторина по Спец.Тех.</h2>
+        <p>
+            Проверьте свои знания перед экзаменом у Дракулы!<br>
+            База содержит <strong id="totalCount">…</strong> вопросов разной сложности.
+        </p>
+        <div style="margin: 30px 0;">
+            <p class="question-count-label">Выберите количество вопросов:</p>
+            <div class="count-buttons" id="countButtons">
+                <!-- кнопки генерируются JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="quiz-content" id="quizContent">
+        <div class="header">
+            <button class="finish-early-btn" onclick="finishEarly()" title="Завершить досрочно">✕</button>
+            <h1 id="quizTitle">⚡ Викторина по Спец.Тех.</h1>
+            <div class="score" id="score">Правильных ответов: 0 из 0</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="question-info">
+            <div class="question-number" id="questionNumber"></div>
+        </div>
+        <div class="question-text" id="questionText"></div>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Следующий вопрос →</button>
+    </div>
+
+    <div class="author">
+        <a href="https://gniloe-kapito.github.io/podgotovka-ekzamen-dracula17-02-26/poedanie-krivetki.html">Claude AI | Sergey Vurganov</a>
+    </div>
+</div>
+
+<script>
+/* ── Theme ── */
+(function () {
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.getElementById('theme-icon').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+/* ── State ── */
+let allQuestions       = [];
+let shuffledQuestions  = [];
+let currentQuestion    = 0;
+let correctAnswers     = 0;
+let answeredQuestions  = 0;
+let incorrectQuestions = [];
+let isAnswered         = false;
+
+/* ── Helpers ── */
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+/* ── Load questions ── */
+async function loadQuestions() {
+    try {
+        const res = await fetch('questions.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allQuestions = await res.json();
+        showStartScreen();
+    } catch (e) {
+        console.error('Ошибка загрузки questions.json:', e);
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('errorScreen').style.display   = 'block';
+    }
+}
+
+/* ── Start screen ── */
+function showStartScreen() {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('startScreen').style.display   = 'block';
+
+    const total = allQuestions.length;
+    document.getElementById('totalCount').textContent = total;
+
+    const presets = [15, 25, 50, 100];
+    const container = document.getElementById('countButtons');
+    container.innerHTML = '';
+
+    presets.forEach(n => {
+        if (n < total) {
+            const btn = document.createElement('button');
+            btn.className   = 'question-count-btn';
+            btn.textContent = `${n} вопросов`;
+            btn.onclick     = () => startQuizWithCount(n);
+            container.appendChild(btn);
+        }
+    });
+
+    const allBtn = document.createElement('button');
+    allBtn.className   = 'question-count-btn all';
+    allBtn.textContent = `Все ${total} вопросов`;
+    allBtn.onclick     = () => startQuizWithCount(total);
+    container.appendChild(allBtn);
+}
+
+/* ── Quiz start ── */
+function startQuizWithCount(count) {
+    shuffledQuestions  = shuffleArray(allQuestions).slice(0, count);
+    currentQuestion    = 0;
+    correctAnswers     = 0;
+    answeredQuestions  = 0;
+    incorrectQuestions = [];
+
+    document.getElementById('startScreen').style.display  = 'none';
+    document.getElementById('quizContent').style.display  = 'block';
+    document.getElementById('quizTitle').textContent      = '⚡ Викторина по Спец.Тех.';
+    loadQuestion();
+}
+
+function startRetryQuiz() {
+    shuffledQuestions  = shuffleArray(incorrectQuestions);
+    currentQuestion    = 0;
+    correctAnswers     = 0;
+    answeredQuestions  = 0;
+    incorrectQuestions = [];
+
+    document.getElementById('quizTitle').textContent = '⚡ Работа над ошибками';
+    document.getElementById('quizContent').innerHTML = buildQuizHTML();
+    loadQuestion();
+}
+
+function buildQuizHTML() {
+    return `
+        <div class="header">
+            <button class="finish-early-btn" onclick="finishEarly()" title="Завершить досрочно">✕</button>
+            <h1 id="quizTitle">⚡ Работа над ошибками</h1>
+            <div class="score" id="score">Правильных ответов: 0 из 0</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="question-info"><div class="question-number" id="questionNumber"></div></div>
+        <div class="question-text" id="questionText"></div>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Следующий вопрос →</button>
+    `;
+}
+
+/* ── Question loading ── */
+function loadQuestion() {
+    isAnswered = false;
+    const q = shuffledQuestions[currentQuestion];
+
+    // Перемешиваем ответы
+    const withIdx = q.answers.map((text, i) => ({ text, originalIndex: i }));
+    const shuffled = shuffleArray(withIdx);
+    q.shuffledAnswers        = shuffled;
+    q.correctAnswerPosition  = shuffled.findIndex(a => a.originalIndex === q.correct);
+
+    document.getElementById('questionNumber').textContent =
+        `Вопрос ${currentQuestion + 1} из ${shuffledQuestions.length} | ${q.category}`;
+    document.getElementById('questionText').textContent = q.question;
+
+    const container = document.getElementById('answers');
+    container.innerHTML = '';
+    shuffled.forEach((ans, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = ans.text;
+        btn.onclick = () => checkAnswer(idx);
+        container.appendChild(btn);
+    });
+
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('nextBtn').style.display  = 'none';
+    updateProgress();
+}
+
+/* ── Answer check ── */
+function checkAnswer(selected) {
+    if (isAnswered) return;
+    isAnswered = true;
+
+    const q       = shuffledQuestions[currentQuestion];
+    const buttons = document.querySelectorAll('.answer-btn');
+    const feedback = document.getElementById('feedback');
+
+    buttons.forEach((btn, idx) => {
+        btn.classList.add('disabled');
+        btn.style.pointerEvents = 'none';
+        if (idx === q.correctAnswerPosition)                          btn.classList.add('correct');
+        if (idx === selected && idx !== q.correctAnswerPosition)      btn.classList.add('incorrect');
+    });
+
+    answeredQuestions++;
+
+    if (selected === q.correctAnswerPosition) {
+        correctAnswers++;
+        feedback.className   = 'feedback correct';
+        feedback.textContent = '✓ Правильно!';
+    } else {
+        incorrectQuestions.push(q);
+        feedback.className   = 'feedback incorrect';
+        feedback.textContent = `✗ Неправильно. Правильный ответ: ${q.shuffledAnswers[q.correctAnswerPosition].text}`;
+    }
+
+    feedback.style.display = 'block';
+    document.getElementById('nextBtn').style.display = 'block';
+    updateScore();
+}
+
+/* ── Navigation ── */
+function nextQuestion() {
+    currentQuestion++;
+    if (currentQuestion < shuffledQuestions.length) {
+        loadQuestion();
+    } else {
+        showFinalScore();
+    }
+}
+
+function finishEarly() {
+    if (answeredQuestions === 0) { alert('Вы ещё не ответили ни на один вопрос!'); return; }
+    if (confirm('Завершить досрочно? Будет показан результат по отвеченным вопросам.')) {
+        shuffledQuestions = shuffledQuestions.slice(0, currentQuestion);
+        showFinalScore();
+    }
+}
+
+/* ── Score ── */
+function updateScore() {
+    document.getElementById('score').textContent =
+        `Правильных ответов: ${correctAnswers} из ${answeredQuestions}`;
+}
+
+function updateProgress() {
+    const pct = ((currentQuestion + 1) / shuffledQuestions.length) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function showFinalScore() {
+    const pct = Math.round((correctAnswers / shuffledQuestions.length) * 100);
+    let msg = '';
+    if (pct >= 90) msg = '🏆 Ебанутый гений 25 века!';
+    else if (pct >= 70) msg = '👍 Хорошо! Но есть над чем поработать.';
+    else if (pct >= 50) msg = '📚 Неплохо, но рекомендуем повторить материал.';
+    else msg = '💪 Нужно больше практики. Попробуйте ещё раз!';
+
+    let retryBtn = '';
+    if (incorrectQuestions.length > 0) {
+        retryBtn = `<button class="restart-btn" onclick="startRetryQuiz()"
+            style="background:linear-gradient(135deg,#f093fb,#f5576c);margin-right:10px;">
+            📝 Работа над ошибками (${incorrectQuestions.length})
+        </button>`;
+    }
+
+    document.getElementById('quizContent').innerHTML = `
+        <div class="final-score">
+            <h2>Викторина завершена!</h2>
+            <p>Ваш результат: <strong>${correctAnswers} из ${shuffledQuestions.length}</strong> (${pct}%)</p>
+            <p>${msg}</p>
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+                ${retryBtn}
+                <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
+            </div>
+        </div>
+    `;
+}
+
+/* ── Init ── */
+loadQuestions();
+</script>
+</body>
+</html>
