@@ -48,7 +48,11 @@
     // results
     result: null,
     // search
-    query: ""
+    query: "",
+    // localStorage-persisted stats
+    stats: defaultStats(),
+    // keyboard hints overlay
+    kbdOverlayOpen: false
   };
 
   /* ── Утилиты ── */
@@ -77,6 +81,114 @@
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       try { navigator.vibrate(p); } catch (e) {}
     }
+  }
+
+  /* ── localStorage helpers (wrong-bank, streak, category mastery) ── */
+  var LS_KEY = "spec-tech-stats-v1";
+  function loadStats() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return defaultStats();
+      var s = JSON.parse(raw);
+      if (!s || typeof s !== "object") return defaultStats();
+      return {
+        wrongBank: Array.isArray(s.wrongBank) ? s.wrongBank : [],
+        catMastery: (s.catMastery && typeof s.catMastery === "object") ? s.catMastery : {},
+        streak: {
+          current: Number(s.streak && s.streak.current) || 0,
+          lastDay: (s.streak && s.streak.lastDay) || null,
+          best: Number(s.streak && s.streak.best) || 0
+        },
+        totalAnswered: Number(s.totalAnswered) || 0,
+        totalCorrect: Number(s.totalCorrect) || 0,
+        promptDismissed: !!s.promptDismissed
+      };
+    } catch (e) { return defaultStats(); }
+  }
+  function defaultStats() {
+    return {
+      wrongBank: [],
+      catMastery: {},
+      streak: { current: 0, lastDay: null, best: 0 },
+      totalAnswered: 0,
+      totalCorrect: 0,
+      promptDismissed: false
+    };
+  }
+  function saveStats() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state.stats)); } catch (e) {}
+  }
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function yesterdayStr() {
+    var d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  /** Update streak based on today's activity */
+  function touchStreak() {
+    var today = todayStr();
+    var s = state.stats.streak;
+    if (s.lastDay === today) return; // already counted today
+    if (s.lastDay === yesterdayStr()) {
+      s.current += 1;
+    } else {
+      s.current = 1;
+    }
+    s.lastDay = today;
+    if (s.current > s.best) s.best = s.current;
+    saveStats();
+  }
+  /** Record a session result into stats */
+  function recordSession(result) {
+    if (!result) return;
+    touchStreak();
+    state.stats.totalAnswered += result.answered;
+    state.stats.totalCorrect += result.correct;
+    // Update wrong-bank: add wrong questions, remove correctly-answered ones
+    var wrongTexts = {};
+    result.wrongQuestions.forEach(function (w) { wrongTexts[w.question] = w; });
+    // Remove from bank questions that were answered correctly this session
+    var correctTexts = {};
+    if (state.quiz && state.quiz.answered) {
+      state.quiz.answered.forEach(function (a) {
+        if (a.isCorrect) correctTexts[a.question.question] = true;
+      });
+    }
+    state.stats.wrongBank = state.stats.wrongBank.filter(function (q) {
+      return !correctTexts[q.question];
+    });
+    // Add new wrong questions (avoid duplicates by question text)
+    var existingTexts = {};
+    state.stats.wrongBank.forEach(function (q) { existingTexts[q.question] = true; });
+    result.wrongQuestions.forEach(function (w) {
+      if (!existingTexts[w.question]) {
+        state.stats.wrongBank.push({
+          question: w.question,
+          category: w.category,
+          ticket: w.ticket,
+          docUrl: w.docUrl
+        });
+        existingTexts[w.question] = true;
+      }
+    });
+    // Update category mastery
+    result.perCategory.forEach(function (c) {
+      var prev = state.stats.catMastery[c.category] || { correct: 0, total: 0 };
+      // Rolling: keep last ~20 answers per category
+      var newTotal = Math.min(prev.total + c.total, 20);
+      var newCorrect = Math.min(prev.correct + c.correct, 20);
+      state.stats.catMastery[c.category] = { correct: newCorrect, total: newTotal };
+    });
+    saveStats();
+  }
+  /** Get mastery percentage for a category (0-100), or null if no data */
+  function getCatMastery(catName) {
+    var m = state.stats.catMastery[catName];
+    if (!m || m.total === 0) return null;
+    return Math.round((m.correct / m.total) * 100);
   }
   function fmtTime(s) {
     var m = Math.floor(s / 60), ss = s % 60;
@@ -193,6 +305,29 @@
         el.style.width = el.getAttribute("data-w") + "%";
       });
     }
+    // Анимация счётчика на главной
+    if (state.view === "home") {
+      animateCounters();
+    }
+  }
+
+  /** Анимация счётчиков (0 → N) на главной странице */
+  function animateCounters() {
+    $all("[data-count-to]").forEach(function (el) {
+      var target = parseInt(el.getAttribute("data-count-to"), 10);
+      if (isNaN(target) || target === 0) { el.textContent = target; return; }
+      var duration = 800; // ms
+      var start = performance.now();
+      function tick(now) {
+        var elapsed = now - start;
+        var progress = Math.min(elapsed / duration, 1);
+        // easeOutQuart for snappy feel
+        var eased = 1 - Math.pow(1 - progress, 4);
+        el.textContent = Math.round(eased * target);
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
   }
 
   /* ── Loading / Error ── */
@@ -224,14 +359,70 @@
         '<span class="mode-arrow">' + ICONS.chevR + '</span>' +
       '</button>';
     }).join("");
+
+    // Streak badge (only if streak > 0)
+    var streakHtml = "";
+    if (state.stats.streak.current > 0) {
+      streakHtml = '<span class="streak-badge active" title="Серия дней подряд">' +
+        '<span class="streak-flame">🔥</span>' + state.stats.streak.current +
+        ' ' + plural(state.stats.streak.current, "день", "дня", "дней") + '</span>';
+    }
+
+    // Wrong-bank prompt (only if bank has items and not dismissed)
+    var wrongBankHtml = "";
+    if (state.stats.wrongBank.length > 0 && !state.stats.promptDismissed) {
+      wrongBankHtml = '<div class="wrong-bank-prompt">' +
+        '<span class="wbp-icon">' + ICONS.alert + '</span>' +
+        '<div class="wbp-body">' +
+          '<div class="wbp-title">Работа над ошибками</div>' +
+          '<div class="wbp-desc">В банке ' + state.stats.wrongBank.length + ' ' + plural(state.stats.wrongBank.length, "вопрос", "вопроса", "вопросов") + ', которые ты раньше отвечал неверно.</div>' +
+        '</div>' +
+        '<button class="wbp-btn" data-action="start-wrong-bank" type="button">Повторить</button>' +
+        '<button class="wbp-close" data-action="dismiss-prompt" type="button" aria-label="Скрыть">' + ICONS.x + '</button>' +
+      '</div>';
+    }
+
     return '<section class="anim-fade">' +
       '<div class="hero">' +
-        '<h1>Спец.Тех.</h1>' +
-        '<p>Подготовка к экзамену у Дракулы. ' + state.questions.length + ' ' + plural(state.questions.length, "вопрос", "вопроса", "вопросов") +
-        ' по ' + state.categories.length + ' ' + plural(state.categories.length, "билету", "билетам", "билетам") + ' — гоняй, пока не выучишь.</p>' +
+        '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">' +
+          '<div style="flex:1;min-width:0">' +
+            '<h1>Спец.Тех.</h1>' +
+            '<p>Подготовка к экзамену у Дракулы — гоняй, пока не выучишь.</p>' +
+          '</div>' +
+          streakHtml +
+        '</div>' +
+        '<div class="hero-stats">' +
+          '<div class="hero-stat"><span class="hero-stat-num" data-count-to="' + state.questions.length + '">0</span><span class="hero-stat-label">' + plural(state.questions.length, "вопрос", "вопроса", "вопросов") + '</span></div>' +
+          '<span class="hero-stat-dot"></span>' +
+          '<div class="hero-stat"><span class="hero-stat-num" data-count-to="' + state.categories.length + '">0</span><span class="hero-stat-label">' + plural(state.categories.length, "билет", "билета", "билетов") + '</span></div>' +
+          '<span class="hero-stat-dot"></span>' +
+          '<div class="hero-stat"><span class="hero-stat-num" data-count-to="' + (state.stats.totalAnswered || 0) + '">0</span><span class="hero-stat-label">отвечено всего</span></div>' +
+        '</div>' +
       '</div>' +
+      wrongBankHtml +
       '<div class="modes-grid">' + cards + '</div>' +
     '</section>';
+  }
+
+  /** Start quiz from the persistent wrong-bank */
+  function startWrongBank() {
+    if (state.stats.wrongBank.length === 0) return;
+    // Find full question objects by matching question text
+    var bankTexts = {};
+    state.stats.wrongBank.forEach(function (w) { bankTexts[w.question] = true; });
+    var qs = state.questions.filter(function (q) { return bankTexts[q.question]; });
+    if (qs.length === 0) {
+      // Bank items no longer match questions.json — clear bank
+      state.stats.wrongBank = [];
+      saveStats();
+      return;
+    }
+    startQuiz("quiz", { questions: qs, title: "Банк ошибок (" + qs.length + ")" });
+  }
+  function dismissPrompt() {
+    state.stats.promptDismissed = true;
+    saveStats();
+    render();
   }
 
   /* ── Quiz (quiz/quick/category) ── */
@@ -448,6 +639,7 @@
       perCategory: perCategory,
       wrongQuestions: wrongQuestions
     };
+    recordSession(state.result);
     state.view = "results";
     render();
   }
@@ -521,11 +713,23 @@
   /* ── Categories ── */
   function renderCategories() {
     var items = state.categories.map(function (c) {
+      var mastery = getCatMastery(c.name);
+      var masteryHtml = "";
+      if (mastery !== null) {
+        var cls = mastery >= 80 ? "" : mastery >= 50 ? "partial" : "low";
+        masteryHtml = '<div class="cat-mastery">' +
+          '<div class="cat-mastery-row">' +
+            '<span>мастерство ' + mastery + '%</span>' +
+            '<div class="cat-mastery-track"><div class="cat-mastery-fill ' + cls + '" style="width:' + mastery + '%"></div></div>' +
+          '</div>' +
+        '</div>';
+      }
       return '<button class="cat-item" data-action="pick-category" data-cat="' + esc(c.name) + '" type="button">' +
         '<span class="cat-ticket">' + esc(c.ticket) + '</span>' +
         '<span class="cat-body">' +
           '<span class="cat-name">' + esc(c.name) + '</span><br>' +
           '<span class="cat-count">' + c.count + ' ' + plural(c.count, "вопрос", "вопроса", "вопросов") + '</span>' +
+          masteryHtml +
         '</span>' +
         '<a class="icon-link" href="' + esc(c.docUrl) + '" target="_blank" rel="noopener noreferrer" data-action="noop" aria-label="Конспект: ' + esc(c.name) + '">' + ICONS.external + '</a>' +
         '<span class="cat-chev">' + ICONS.chevR + '</span>' +
@@ -656,6 +860,7 @@
       wrongList +
       '<div class="result-actions">' +
         '<button class="btn btn-lg" data-action="restart" type="button">' + ICONS.refresh + 'Пройти заново</button>' +
+        (r.wrong > 0 ? '<button class="btn btn-lg" data-action="retry-wrong" type="button" style="background:var(--danger)">' + ICONS.alert + 'Работа над ошибками (' + r.wrong + ')</button>' : '') +
         '<button class="btn btn-outline btn-lg" data-action="share" type="button">' + ICONS.share + 'Поделиться</button>' +
       '</div>' +
     '</section>';
@@ -703,6 +908,18 @@
     startQuiz("quick", { questions: picked, title: "Быстрый режим", timedSeconds: 120 });
   }
 
+  /** Работа над ошибками — пройти только те вопросы, на которые ответили неправильно */
+  function startRetryWrong() {
+    var r = state.result;
+    if (!r || r.wrongQuestions.length === 0) { goHome(); return; }
+    // Собираем полные объекты вопросов из state.questions по тексту вопроса
+    var wrongTexts = {};
+    r.wrongQuestions.forEach(function (w) { wrongTexts[w.question] = true; });
+    var wrongQs = state.questions.filter(function (q) { return wrongTexts[q.question]; });
+    if (wrongQs.length === 0) { goHome(); return; }
+    startQuiz("quiz", { questions: wrongQs, title: "Работа над ошибками" });
+  }
+
   /* ── Навигация ── */
   function goHome() {
     stopTimer();
@@ -739,6 +956,11 @@
       case "pick-category": pickCategory(t.getAttribute("data-cat")); break;
       case "search-clear": doSearch(""); break;
       case "restart": restart(); break;
+      case "retry-wrong": startRetryWrong(); break;
+      case "start-wrong-bank": startWrongBank(); break;
+      case "dismiss-prompt": dismissPrompt(); break;
+      case "toggle-kbd": toggleKbdOverlay(); break;
+      case "close-kbd": toggleKbdOverlay(); break;
       case "share": shareResult(); break;
       case "noop": break;
     }
@@ -754,6 +976,17 @@
 
   /* ── Горячие клавиши (только десктоп) ── */
   function on_keydown(e) {
+    // Keyboard hints overlay — works on all views, all devices with keyboard
+    if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
+      e.preventDefault();
+      toggleKbdOverlay();
+      return;
+    }
+    if (e.key === "Escape" && state.kbdOverlayOpen) {
+      e.preventDefault();
+      toggleKbdOverlay();
+      return;
+    }
     if (!isDesktop()) return;
     var tag = (e.target.tagName || "").toUpperCase();
     if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
@@ -780,6 +1013,52 @@
     } else if (state.view === "home") {
       if (key === "Escape") { /* ничего */ }
     }
+  }
+
+  /** Toggle keyboard hints overlay */
+  function toggleKbdOverlay() {
+    state.kbdOverlayOpen = !state.kbdOverlayOpen;
+    var existing = $("#kbd-overlay");
+    if (state.kbdOverlayOpen) {
+      if (!existing) {
+        var el = document.createElement("div");
+        el.id = "kbd-overlay";
+        el.className = "kbd-overlay";
+        el.innerHTML = renderKbdOverlay();
+        el.addEventListener("click", function (ev) {
+          if (ev.target === el || ev.target.closest("[data-action='close-kbd']")) {
+            toggleKbdOverlay();
+          }
+        });
+        document.body.appendChild(el);
+      }
+      existing = $("#kbd-overlay");
+      if (existing) existing.hidden = false;
+    } else {
+      if (existing) existing.hidden = true;
+    }
+  }
+
+  function renderKbdOverlay() {
+    var rows = [
+      { label: "Выбрать ответ 1–4", keys: ["1", "2", "3", "4"] },
+      { label: "Следующий вопрос", keys: ["Enter"] },
+      { label: "Перевернуть карточку", keys: ["Enter", "Space"] },
+      { label: "Следующая / предыдущая карточка", keys: ["→", "←"] },
+      { label: "Выйти на главную", keys: ["Esc"] },
+      { label: "Показать / скрыть подсказки", keys: ["?"] }
+    ];
+    var rowsHtml = rows.map(function (r) {
+      var keysHtml = r.keys.map(function (k) {
+        return '<span class="kbd-key">' + esc(k) + '</span>';
+      }).join("");
+      return '<div class="kbd-row"><span class="kbd-label">' + esc(r.label) + '</span><span class="kbd-keys">' + keysHtml + '</span></div>';
+    }).join("");
+    return '<div class="kbd-dialog">' +
+      '<h2>Горячие клавиши</h2>' +
+      '<p class="kbd-sub">Доступно только на устройствах с клавиатурой.</p>' +
+      '<div class="kbd-list">' + rowsHtml + '</div>' +
+    '</div>';
   }
 
   /* ── Свайпы (мобилы) ── */
@@ -819,6 +1098,7 @@
   /* ── Init ── */
   function init() {
     setupTheme();
+    state.stats = loadStats();
     document.addEventListener("click", on_click);
     document.addEventListener("input", on_input);
     document.addEventListener("keydown", on_keydown);
