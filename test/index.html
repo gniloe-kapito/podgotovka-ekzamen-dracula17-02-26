@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+  <title>Викторина по Спец.Тех.</title>
+  <meta name="description" content="Подготовка к экзамену по специальной технологии. Викторина, карточки, быстрый режим и тренировка по категориям.">
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <!-- Текучий волновой фон -->
+  <div class="wave-bg" aria-hidden="true">
+    <div class="wave-blob wave-blob-1"></div>
+    <div class="wave-blob wave-blob-2"></div>
+    <div class="wave-blob wave-blob-3"></div>
+  </div>
+
+  <!-- Глобальный topbar -->
+  <header class="topbar">
+    <button class="brand" type="button" data-action="home" aria-label="На главную">
+      <span class="brand-mark">СТ</span>
+      <span class="brand-text">Викторина по Спец.Тех.</span>
+    </button>
+    <button class="icon-btn" type="button" data-action="cycle-theme" aria-label="Переключить тему" title="Тема">
+      <svg class="icon-theme icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-theme icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="icon-theme icon-monitor" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </button>
+  </header>
+
+  <!-- Контент (перерисовывается per view) -->
+  <main id="app" class="app"></main>
+
+  <!-- Sticky footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      Сделано на коленке · <span id="footer-count">…</span> вопросов ·
+      <a id="footer-doc" href="https://docs.google.com/document/d/14T0skqC54wqwPvL55M2wNhRfV_gkcLz_GbZTfJi960U/edit?tab=t.0" target="_blank" rel="noopener noreferrer">Конспект</a>
+      · Sergey Vurganov
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
