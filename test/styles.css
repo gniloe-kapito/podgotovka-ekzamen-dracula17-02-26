@@ -334,7 +334,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   border: 1px solid var(--border);
   border-radius: 14px;
 }
-.mode-card.primary .mode-icon { background: rgba(255,255,255,0.10); border-color: transparent; }
+.mode-card.primary .mode-icon { background: color-mix(in srgb, var(--primary-fg) 12%, transparent); border-color: transparent; }
 .mode-body { flex: 1; min-width: 0; }
 .mode-title {
   font-size: 15px;
@@ -349,9 +349,9 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   background: var(--accent);
   color: var(--muted);
 }
-.mode-card.primary .mode-meta { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8); }
+.mode-card.primary .mode-meta { background: color-mix(in srgb, var(--primary-fg) 14%, transparent); color: color-mix(in srgb, var(--primary-fg) 75%, transparent); }
 .mode-desc { margin-top: 2px; font-size: 13px; color: var(--muted); }
-.mode-card.primary .mode-desc { color: rgba(255,255,255,0.7); }
+.mode-card.primary .mode-desc { color: color-mix(in srgb, var(--primary-fg) 68%, transparent); }
 .mode-arrow {
   position: absolute;
   right: 16px; bottom: 16px;
@@ -359,7 +359,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   transition: transform .15s;
 }
 .mode-card:hover .mode-arrow { transform: translateX(3px); }
-.mode-card.primary .mode-arrow { color: rgba(255,255,255,0.6); }
+.mode-card.primary .mode-arrow { color: color-mix(in srgb, var(--primary-fg) 55%, transparent); }
 
 /* ── Quiz ── */
 .quiz-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
@@ -466,6 +466,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   width: 100%;
   min-height: 320px;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(.2,.7,.2,1);
   cursor: pointer;
 }
@@ -481,11 +482,36 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   border-radius: 24px;
   border: 1px solid var(--border);
   background: var(--card);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* visibility toggle guarantees no bleed-through even when
+     backface-visibility is ignored by the browser engine */
+  -webkit-transition: visibility 0s linear 0.28s;
+  transition: visibility 0s linear 0.28s;
+}
+.flash-face.front {
+  visibility: visible;
 }
 .flash-face.back {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(0);
+  -webkit-transform: rotateY(180deg) translateZ(0);
   border-color: var(--success-border);
   background: var(--success-bg);
+  visibility: hidden;
+}
+/* When flipped: hide front at midpoint, show back at midpoint */
+.flash-card.flipped .flash-face.front { visibility: hidden; }
+.flash-card.flipped .flash-face.back { visibility: visible; -webkit-transition-delay: 0.28s; transition-delay: 0.28s; }
+.flash-card .flash-face.back { -webkit-transition-delay: 0.28s; transition-delay: 0.28s; }
+/* Robust fallback: when 3D is not supported, toggle display directly.
+   This GUARANTEES only one face is visible at a time, on every browser. */
+@supports not ((transform-style: preserve-3d) or (-webkit-transform-style: preserve-3d)) {
+  .flash-card { transform: none !important; transition: none !important; }
+  .flash-face { position: relative; transform: none !important; -webkit-transform: none !important; }
+  .flash-face.front { display: flex; }
+  .flash-face.back { display: none; }
+  .flash-card.flipped .flash-face.front { display: none; }
+  .flash-card.flipped .flash-face.back { display: flex; }
 }
 .flash-label {
   font-size: 11px;
