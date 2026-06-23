@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0a0a0a">
-<title>Змейка</title>
+<title>🧛 Змейка</title>
 <style>
 /* ============================================================
    ЗМЕЙКА — около-монохромный стиль (как у Grok). Тёмная тема основная.
@@ -243,7 +243,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark">ЗМ</span>
-      <span class="brand-text">Змейка</span>
+      <span class="brand-text">🧛 Змейка</span>
     </div>
   </header>
 
@@ -261,7 +261,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
         <!-- Стартовый оверлей -->
         <div class="board-overlay" id="startOverlay">
           <div class="ov-eyebrow">старт</div>
-          <div class="ov-title">Змейка</div>
+          <div class="ov-title">🧛 Змейка</div>
           <div class="ov-sub">Собирай еду и расти. Не врезайся в стены и в себя.</div>
           <div class="speed-row" role="group" aria-label="Скорость">
             <span class="speed-label">Скорость:</span>
@@ -298,7 +298,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   </main>
 
   <footer class="footer">
-    <div class="footer-inner"><span>Змейка</span></div>
+    <div class="footer-inner"><span>🧛 Змейка</span></div>
   </footer>
 
 <script>
@@ -319,6 +319,8 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   var SPEEDS = { slow: 120, normal: 162, fast: 210 };
   var SPEED_CAP = 300;
   var SPEED_GAIN = 4.5;
+  var MAX_FOOD = 5; // максимум единиц еды на поле
+  var FOOD_STEP = 3; // +1 еда каждые FOOD_STEP очков
 
   var DIR_VEC = {
     up: { x: 0, y: -1 }, down: { x: 0, y: 1 },
@@ -372,7 +374,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   var pendingDir = null;
   var trail = [];
   var segments = INIT_LEN;
-  var food = { x: 0, y: 0 };
+  var foods = [];
   var speedKey = "normal";
   var speed = SPEEDS.normal;
   var score = 0;
@@ -405,21 +407,41 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
   setupCanvas();
   window.addEventListener("resize", setupCanvas);
 
-  function spawnFood() {
+  function targetFoodCount() {
+    // чем длиннее змейка — тем больше еды на поле
+    return Math.min(MAX_FOOD, 1 + Math.floor(score / FOOD_STEP));
+  }
+
+  function spawnOneFood() {
     var margin = FOOD_SIZE;
-    for (var tries = 0; tries < 60; tries++) {
+    for (var tries = 0; tries < 80; tries++) {
       var fx = margin + Math.random() * (BOARD - margin * 2);
       var fy = margin + Math.random() * (BOARD - margin * 2);
       var ok = true;
       for (var i = 0; i < trail.length; i++) {
         if (dist(trail[i], { x: fx, y: fy }) < BODY_SIZE + 4) { ok = false; break; }
       }
-      if (ok) { food = { x: fx, y: fy }; return; }
+      if (ok) {
+        for (var f = 0; f < foods.length; f++) {
+          if (dist(foods[f], { x: fx, y: fy }) < FOOD_SIZE * 2.2) { ok = false; break; }
+        }
+      }
+      if (ok) return { x: fx, y: fy };
     }
-    food = {
+    return {
       x: margin + Math.random() * (BOARD - margin * 2),
       y: margin + Math.random() * (BOARD - margin * 2)
     };
+  }
+
+  function maintainFoods() {
+    var target = targetFoodCount();
+    while (foods.length < target) {
+      foods.push(spawnOneFood());
+    }
+    while (foods.length > target) {
+      foods.pop();
+    }
   }
 
   function reset() {
@@ -430,12 +452,13 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
     score = 0;
     speed = SPEEDS[speedKey];
     eatPulse = 0;
+    foods = [];
     trail = [];
     var need = segments * SEG_GAP + 40;
     for (var d = 0; d <= need; d += 3) {
       trail.push({ x: head.x - d, y: head.y });
     }
-    spawnFood();
+    maintainFoods();
     scoreEl.textContent = score;
     lenEl.textContent = segments + 1;
   }
@@ -492,14 +515,20 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
     }
     if (cut < trail.length) trail.length = cut;
 
-    if (dist(head, food) < (FOOD_SIZE + HEAD_SIZE) / 2 - 4) {
-      segments += 1;
-      score += 1;
-      speed = Math.min(SPEED_CAP, speed + SPEED_GAIN);
-      eatPulse = 1;
-      spawnFood();
-      scoreEl.textContent = score;
-      lenEl.textContent = segments + 1;
+    // еда — может быть несколько, едим ближайшую
+    var eatR = (FOOD_SIZE + HEAD_SIZE) / 2 - 4;
+    for (var fi = 0; fi < foods.length; fi++) {
+      if (dist(head, foods[fi]) < eatR) {
+        foods.splice(fi, 1);
+        segments += 1;
+        score += 1;
+        speed = Math.min(SPEED_CAP, speed + SPEED_GAIN);
+        eatPulse = 1;
+        maintainFoods();
+        scoreEl.textContent = score;
+        lenEl.textContent = segments + 1;
+        break;
+      }
     }
 
     var body = sampleBody();
@@ -570,7 +599,10 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; user-select:
     }
 
     var pulse = Math.sin(foodPulse * 4) * 0.08 + 1;
-    drawTile(food, FOOD_SIZE * pulse, foodImg, p, 9, 1, false);
+    var fsize = FOOD_SIZE * pulse;
+    for (var ff = 0; ff < foods.length; ff++) {
+      drawTile(foods[ff], fsize, foodImg, p, 9, 1, false);
+    }
 
     var body = sampleBody();
     if (body.length > 1) {
